@@ -1,0 +1,3 @@
+new result = trap { self.might_explode };
+
+if trap does connipt {
