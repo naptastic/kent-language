@@ -1,0 +1,87 @@
+===== BEGIN CORE CLASSES =====
+    Object
+        Is:
+            Object
+        Does:
+            new                 # does what it says on the box
+            destroy             # does what it says on the box
+            classify            # returns an array representing this object's method search order
+            default             # abstract method; what to do if attribute doesn't exist.
+            do                  # abstract method; what to do in void context with no requested attribute.
+            is                  # returns or reassigns... I'm not sure how this should work.
+            has                 # true if an attribute by given name is available.
+    Bool
+        Is:
+            Object
+            Bool
+        Does:
+            bool
+    Number
+        Is:
+            Object
+            Number
+        Does:
+            value
+    String
+        Is:
+            Object
+            String
+        Does:
+            stringify           # dunno if I like 'stringify'.
+    Array
+        Is:
+            Object
+            Array
+        Does:
+            join( glue )        # 'glue' must stringify... though we don't dictate how!
+            count
+            reverse
+            filter { filter }   # Filter must return true or false... I think?
+            sort { sorter }     # I'm thinking Perl's sort is probably good to emulate?
+            shift
+            unshift
+            push
+            pop
+            each { operation }  # default becomes the array element being yeah'd.
+    Hash
+        Is:
+            Object
+            Hash
+        Does: (probably look at the 'tie' methods for hashes in Perl)
+            keys                # returns / "is" an array
+            values              # ditto
+    Handle
+
+===== END CORE CLASSES =====
+===== BEGIN PROVIDED CLASSES =====
+
+    Table
+        Is:
+            Object
+            Array
+            Table
+        Does:
+            insert
+            delete
+            update
+            select
+
+===== END PROVIDED CLASSES =====
+===== BEGIN PROVIDED LIBRARIES =====
+    STDIO
+    Tables: Provides data structure like a database table (but is really an array of hashes) with select, insert, delete, update methods.
+
+===== BEGIN SERIALIZATION FORMATS =====
+    CSV
+    JSON
+    YAML
+    XML (lol)
+    INI (lol for totally different reasons)
+    MySQL dumps; perhaps dumps in other databases?
+===== END SERIALIZATION FORMATS =====
+===== BEGIN IMAGE FILE FORMATS =====
+===== END IMAGE FILE FORMATS =====
+===== BEGIN AUDIO FILE FORMATS =====
+===== END AUDIO FILE FORMATS =====
+===== BEGIN CONTAINER FORMATS =====
+===== END CONTAINER FORMATS =====
