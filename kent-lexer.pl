@@ -61,6 +61,36 @@ while ( $sourcecode !~ /^$/ ) {
           );
     }
 
+    # Non-interpolating strings. I'm sorry.
+    elsif ( $sourcecode =~ s[^'][] ) {
+        push @tokens, { 'token' => 'begin non-interpolating string' };
+        my $quote_insides = q{};
+
+        while (1) {
+            if ( $sourcecode =~ s[^(.*?)'][] ) {
+                $quote_insides .= $1;
+                if ( $quote_insides =~ s/\\$// ) {
+
+                    # This single quote was escaped. Move the single quote from $source_code to $quoted_insides.
+                    # NOTE: The escape character does not get included in the string's actual contents.
+                    # That would be silly.
+                    $quote_insides .= q{'};
+                    $sourcecode =~ s/^'//;
+                }
+                else {
+                    # This single quote was not escaped.
+                    last;
+                }
+            }
+            else {
+                # The string never terminated. Specifically, $sourcecode has zero single-quotes before it ends.
+                die 'unterminated string (don\'t ask me where, sorry)';
+            }
+        }
+        push @tokens, { 'token' => 'literal string contents', 'raw' => $quote_insides };
+        push @tokens, { 'token' => 'end non-interpolating string' };
+    }
+
     else { print "found something I couldn't lex. Here's what I've got so far:\n"; print Dumper(@tokens); die; }
 }
 use Data::Dumper;
