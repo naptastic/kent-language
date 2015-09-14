@@ -15,55 +15,55 @@ my $sourcecode;
 while ( $sourcecode !~ /^$/ ) {
 
     # The Basics
-    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { 'token' => 'whitespace',      'raw' => $1, }; }
-    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { 'token' => 'possible object', 'raw' => $1, }; }
+    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'whitespace',      raw => $1, }; }
+    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'possible object', raw => $1, }; }
     elsif ( $sourcecode =~ s[^[.]($objreg)][] ) {
         push @tokens,
           (
-            { 'token' => 'access operator' },
-            { 'token' => 'possible object', 'raw' => $1, },
+            { token => 'access operator' },
+            { token => 'possible object', raw => $1, },
           );
     }
 
     # Number Literals
-    elsif ( $sourcecode =~ s[^([.]\d+)][] ) { push @tokens, { 'token' => 'number literal', 'raw' => $1 }; }
-    elsif ( $sourcecode =~ s[^(\d+)][] )    { push @tokens, { 'token' => 'number literal', 'raw' => $1 }; }
+    elsif ( $sourcecode =~ s[^([.]\d+)][] ) { push @tokens, { token => 'number literal', raw => $1 }; }
+    elsif ( $sourcecode =~ s[^(\d+)][] )    { push @tokens, { token => 'number literal', raw => $1 }; }
 
     # Syntax
-    elsif ( $sourcecode =~ s{^=}{} )  { push @tokens, { 'token' => 'assignment operator', }; }
-    elsif ( $sourcecode =~ s{^;}{} )  { push @tokens, { 'token' => 'statement separator', }; }
-    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { 'token' => 'begin expression operator', } }
-    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { 'token' => 'end expression operator', } }
-    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { 'token' => 'item separator', } }
-    elsif ( $sourcecode =~ s[^{][] )  { push @tokens, { 'token' => 'begin scope operator', }; }
-    elsif ( $sourcecode =~ s[^}][] )  { push @tokens, { 'token' => 'end scope operator', }; }
+    elsif ( $sourcecode =~ s{^=}{} )  { push @tokens, { token => 'assignment operator', }; }
+    elsif ( $sourcecode =~ s{^;}{} )  { push @tokens, { token => 'statement separator', }; }
+    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { token => 'begin expression operator', } }
+    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { token => 'end expression operator', } }
+    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { token => 'item separator', } }
+    elsif ( $sourcecode =~ s[^{][] )  { push @tokens, { token => 'begin scope operator', }; }
+    elsif ( $sourcecode =~ s[^}][] )  { push @tokens, { token => 'end scope operator', }; }
 
     # Comparison. ORDER MATTERS.
-    elsif ( $sourcecode =~ s{^==}{} ) { push @tokens, { 'token' => 'comparison operator', }; }
-    elsif ( $sourcecode =~ s{^=<}{} ) { push @tokens, { 'token' => 'less than or equal to', }; }
-    elsif ( $sourcecode =~ s{^<}{} )  { push @tokens, { 'token' => 'less than', }; }
-    elsif ( $sourcecode =~ s{^>=}{} ) { push @tokens, { 'token' => 'greater than or equal to', }; }
-    elsif ( $sourcecode =~ s{^>}{} )  { push @tokens, { 'token' => 'greater than', }; }
+    elsif ( $sourcecode =~ s{^==}{} ) { push @tokens, { token => 'comparison operator', }; }
+    elsif ( $sourcecode =~ s{^=<}{} ) { push @tokens, { token => 'less than or equal to', }; }
+    elsif ( $sourcecode =~ s{^<}{} )  { push @tokens, { token => 'less than', }; }
+    elsif ( $sourcecode =~ s{^>=}{} ) { push @tokens, { token => 'greater than or equal to', }; }
+    elsif ( $sourcecode =~ s{^>}{} )  { push @tokens, { token => 'greater than', }; }
 
     # Comments
-    elsif ( $sourcecode =~ s[^(#.*?\n)][] ) { push @tokens, { 'token' => 'comment', 'raw' => $1 }; }
+    elsif ( $sourcecode =~ s[^(#.*?\n)][] ) { push @tokens, { token => 'comment', raw => $1 }; }
 
     # Maths. ORDER MATTERS.
-    elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { 'token' => 'addition operator', }; }
-    elsif ( $sourcecode =~ s[^\^][] )  { push @tokens, { 'token' => 'exponentiation operator', } }
-    elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { 'token' => 'multiplication operator', } }
-    elsif ( $sourcecode =~ s[/][] )    { push @tokens, { 'token' => 'division operator', } }
+    elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { token => 'addition operator', }; }
+    elsif ( $sourcecode =~ s[^\^][] )  { push @tokens, { token => 'exponentiation operator', } }
+    elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { token => 'multiplication operator', } }
+    elsif ( $sourcecode =~ s[/][] )    { push @tokens, { token => 'division operator', } }
     elsif ( $sourcecode =~ s[^-(\s+)][] ) {
         push @tokens,
           (
-            { 'token' => 'subtraction operator', },
-            { 'token' => 'whitespace', 'raw' => $1, }
+            { token => 'subtraction operator', },
+            { token => 'whitespace', raw => $1, }
           );
     }
 
     # Non-interpolating strings. I'm sorry.
     elsif ( $sourcecode =~ s[^'][] ) {
-        push @tokens, { 'token' => 'begin non-interpolating string' };
+        push @tokens, { token => 'begin non-interpolating string' };
         my $quote_insides = q{};
 
         while (1) {
@@ -87,8 +87,8 @@ while ( $sourcecode !~ /^$/ ) {
                 die 'unterminated string (don\'t ask me where, sorry)';
             }
         }
-        push @tokens, { 'token' => 'literal string contents', 'raw' => $quote_insides };
-        push @tokens, { 'token' => 'end non-interpolating string' };
+        push @tokens, { token => 'literal string contents', raw => $quote_insides };
+        push @tokens, { token => 'end non-interpolating string' };
     }
 
     else { print "found something I couldn't lex. Here's what I've got so far:\n"; print Dumper(@tokens); die; }
