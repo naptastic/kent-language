@@ -15,49 +15,49 @@ my $sourcecode;
 while ( $sourcecode !~ /^$/ ) {
 
     # The Basics
-    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'whitespace',      raw => $1, }; }
-    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'possible object', raw => $1, }; }
+    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'SPACE',      raw => $1, }; }
+    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'ID', raw => $1, }; }
     elsif ( $sourcecode =~ s[^[.]($objreg)][] ) {
         push @tokens,
           (
-            { token => 'access operator' },
-            { token => 'possible object', raw => $1, },
+            { token => 'OP_ACCESS' },
+            { token => 'ID', raw => $1, },
           );
     }
 
     # Number Literals
-    elsif ( $sourcecode =~ s[^([.]\d+)][] ) { push @tokens, { token => 'number literal', raw => $1 }; }
-    elsif ( $sourcecode =~ s[^(\d+)][] )    { push @tokens, { token => 'number literal', raw => $1 }; }
-
-    # Syntax
-    elsif ( $sourcecode =~ s{^=}{} )  { push @tokens, { token => 'assignment operator', }; }
-    elsif ( $sourcecode =~ s{^;}{} )  { push @tokens, { token => 'statement separator', }; }
-    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { token => 'begin expression operator', } }
-    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { token => 'end expression operator', } }
-    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { token => 'item separator', } }
-    elsif ( $sourcecode =~ s[^{][] )  { push @tokens, { token => 'begin scope operator', }; }
-    elsif ( $sourcecode =~ s[^}][] )  { push @tokens, { token => 'end scope operator', }; }
+    # TODO: Make it actually a number.
+    elsif ( $sourcecode =~ s[^(\d*[.]?\d+)][] ) { push @tokens, { token => 'LIT_NUM', raw => $1 }; }
 
     # Comparison. ORDER MATTERS.
-    elsif ( $sourcecode =~ s{^==}{} ) { push @tokens, { token => 'comparison operator', }; }
-    elsif ( $sourcecode =~ s{^=<}{} ) { push @tokens, { token => 'less than or equal to', }; }
-    elsif ( $sourcecode =~ s{^<}{} )  { push @tokens, { token => 'less than', }; }
-    elsif ( $sourcecode =~ s{^>=}{} ) { push @tokens, { token => 'greater than or equal to', }; }
-    elsif ( $sourcecode =~ s{^>}{} )  { push @tokens, { token => 'greater than', }; }
+    elsif ( $sourcecode =~ s{^==}{} ) { push @tokens, { token => 'OP_EQ', }; }
+    elsif ( $sourcecode =~ s{^=<}{} ) { push @tokens, { token => 'OP_LE', }; }
+    elsif ( $sourcecode =~ s{^<}{} )  { push @tokens, { token => 'OP_LT', }; }
+    elsif ( $sourcecode =~ s{^>=}{} ) { push @tokens, { token => 'OP_GE', }; }
+    elsif ( $sourcecode =~ s{^>}{} )  { push @tokens, { token => 'OP_GT', }; }
+
+    # Syntax
+    elsif ( $sourcecode =~ s{^=}{} )  { push @tokens, { token => 'OP_SET', }; }
+    elsif ( $sourcecode =~ s{^;}{} )  { push @tokens, { token => 'OP_SEMI', }; }
+    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { token => 'OP_EXPR_START', } }
+    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { token => 'OP_EXPR_END', } }
+    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { token => 'OP_LIST_NEXT', } }
+    elsif ( $sourcecode =~ s[^{][] )  { push @tokens, { token => 'OP_SCOPE_START', }; }
+    elsif ( $sourcecode =~ s[^}][] )  { push @tokens, { token => 'OP_SCOPE_END', }; }
 
     # Comments
-    elsif ( $sourcecode =~ s[^(#.*?\n)][] ) { push @tokens, { token => 'comment', raw => $1 }; }
+    elsif ( $sourcecode =~ s[^(#.*?\n)][] ) { push @tokens, { token => 'COMMENT', raw => $1 }; }
 
     # Maths. ORDER MATTERS.
-    elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { token => 'addition operator', }; }
-    elsif ( $sourcecode =~ s[^\^][] )  { push @tokens, { token => 'exponentiation operator', } }
-    elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { token => 'multiplication operator', } }
-    elsif ( $sourcecode =~ s[/][] )    { push @tokens, { token => 'division operator', } }
+    elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { token => 'OP_ADD', }; }
+    elsif ( $sourcecode =~ s[^\^][] )  { push @tokens, { token => 'OP_POW', } }
+    elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { token => 'OP_MUL', } }
+    elsif ( $sourcecode =~ s[/][] )    { push @tokens, { token => 'OP_DIV', } }
     elsif ( $sourcecode =~ s[^-(\s+)][] ) {
         push @tokens,
           (
-            { token => 'subtraction operator', },
-            { token => 'whitespace', raw => $1, }
+            { token => 'OP_SUB', },
+            { token => 'SPACE', raw => $1, }
           );
     }
 
