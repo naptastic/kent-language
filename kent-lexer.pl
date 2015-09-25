@@ -15,8 +15,8 @@ my $sourcecode;
 while ( $sourcecode !~ /^$/ ) {
 
     # The Basics
-    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'SPACE',      raw => $1, }; }
-    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'ID', raw => $1, }; }
+    if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'SPACE', raw => $1, }; }
+    elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'ID',    raw => $1, }; }
     elsif ( $sourcecode =~ s[^[.]($objreg)][] ) {
         push @tokens,
           (
@@ -50,7 +50,7 @@ while ( $sourcecode !~ /^$/ ) {
 
     # Maths. ORDER MATTERS.
     elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { token => 'OP_ADD', }; }
-    elsif ( $sourcecode =~ s[^\^][] )  { push @tokens, { token => 'OP_POW', } }
+    elsif ( $sourcecode =~ s[^\**][] ) { push @tokens, { token => 'OP_POW', } }
     elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { token => 'OP_MUL', } }
     elsif ( $sourcecode =~ s[/][] )    { push @tokens, { token => 'OP_DIV', } }
     elsif ( $sourcecode =~ s[^-(\s+)][] ) {
@@ -93,10 +93,12 @@ while ( $sourcecode !~ /^$/ ) {
 
     else { print "found something I couldn't lex. Here's what I've got so far:\n"; print Dumper(@tokens); die; }
 }
+
 # use Data::Dumper;
 # print Dumper(@tokens);
 
 print "I found these identifiers:\n";
+
 # We've got two-thirds of a Schwartzian transform here
-print join(q{ }, map { $_->{'raw'} } grep { $_->{'token'} eq 'ID' } @tokens);
+print join( q{ }, map { $_->{'raw'} } grep { $_->{'token'} eq 'ID' } @tokens );
 print "\n";

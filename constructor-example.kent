@@ -42,7 +42,7 @@ class TronBit;
         with .pos {
             # throw a conniption if new object would be more than 1km from
             # the origin.
-            (.x * .x + .y * .y + .z * .z) ^ .5 must < 1000
+            (.x * .x + .y * .y + .z * .z) ** .5 must < 1000
         }
 
         # Here's another. We will decorate .pos with a 'distance' numeric
