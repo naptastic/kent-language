@@ -1,4 +1,4 @@
-Class Position;
+class Position;
 
 .new ( Number x, Number y, Number z ) {
     new Object self;
@@ -21,13 +21,13 @@ Class Position;
     .z += dz;
 }
 
-Class Color;
+class Color;
 
 .new {
 
 }
 
-Class TronBit;
+class TronBit;
 
 .new ( Position pos, Bool state ) {
     new Object self;

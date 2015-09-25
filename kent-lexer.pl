@@ -93,5 +93,10 @@ while ( $sourcecode !~ /^$/ ) {
 
     else { print "found something I couldn't lex. Here's what I've got so far:\n"; print Dumper(@tokens); die; }
 }
-use Data::Dumper;
-print Dumper(@tokens);
+# use Data::Dumper;
+# print Dumper(@tokens);
+
+print "I found these identifiers:\n";
+# We've got two-thirds of a Schwartzian transform here
+print join(q{ }, map { $_->{'raw'} } grep { $_->{'token'} eq 'ID' } @tokens);
+print "\n";
