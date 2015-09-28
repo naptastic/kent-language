@@ -70,7 +70,6 @@
 ===== BEGIN PROVIDED LIBRARIES =====
     STDIO
     Tables: Provides data structure like a database table (but is really an array of hashes) with select, insert, delete, update methods.
-
 ===== BEGIN SERIALIZATION FORMATS =====
     CSV
     JSON
