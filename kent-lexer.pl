@@ -2,28 +2,36 @@
 
 use strict;
 use warnings;
+use utf8;
+use v5.14;
+
+use Path::Tiny ();
+use Data::Dumper ();
+
 my $objreg = qr/[A-Za-z][A-Za-z0-9_]*/;
 my @tokens;
 my $sourcecode;
+my $filename = shift @ARGV;
 {
-    my $filename = shift @ARGV;
     open( my $fh, '<', $filename ) or die "Couldn't open $filename for reading: $!";
     local $/;
     $sourcecode = (<$fh>);
     close $fh;
 }
+
+say "loaded source code from $filename";
+
 while ( $sourcecode !~ /^$/ ) {
 
     # The Basics
     if    ( $sourcecode =~ s{^(\s+)}{} )    { push @tokens, { token => 'SPACE', raw => $1, }; }
     elsif ( $sourcecode =~ s/^($objreg)// ) { push @tokens, { token => 'ID',    raw => $1, }; }
-    elsif ( $sourcecode =~ s[^[.]($objreg)][] ) {
-        push @tokens,
-          (
-            { token => 'OP_ACCESS' },
-            { token => 'ID', raw => $1, },
-          );
-    }
+    elsif ( $sourcecode =~ s/^:// )         { push @tokens, { token => 'OP_NMSPC', }; }
+    # tidyoff
+    elsif ( $sourcecode =~ s[^[.]($objreg)][] ) { push @tokens, ( { token => 'OP_ACCESS' },
+                                                                  { token => 'ID',
+                                                                    raw   => $1, }, ); }
+    # tidyon
 
     # Number Literals
     # TODO: Make it actually a number.
@@ -39,9 +47,9 @@ while ( $sourcecode !~ /^$/ ) {
     # Syntax
     elsif ( $sourcecode =~ s{^=}{} )  { push @tokens, { token => 'OP_SET', }; }
     elsif ( $sourcecode =~ s{^;}{} )  { push @tokens, { token => 'OP_SEMI', }; }
-    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { token => 'OP_EXPR_START', } }
-    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { token => 'OP_EXPR_END', } }
-    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { token => 'OP_LIST_NEXT', } }
+    elsif ( $sourcecode =~ s[^\(][] ) { push @tokens, { token => 'OP_EXPR_START', }; }
+    elsif ( $sourcecode =~ s[^\)][] ) { push @tokens, { token => 'OP_EXPR_END', }; }
+    elsif ( $sourcecode =~ s[^,][] )  { push @tokens, { token => 'OP_LIST_NEXT', }; }
     elsif ( $sourcecode =~ s[^{][] )  { push @tokens, { token => 'OP_SCOPE_START', }; }
     elsif ( $sourcecode =~ s[^}][] )  { push @tokens, { token => 'OP_SCOPE_END', }; }
 
@@ -49,17 +57,17 @@ while ( $sourcecode !~ /^$/ ) {
     elsif ( $sourcecode =~ s[^(#.*?\n)][] ) { push @tokens, { token => 'COMMENT', raw => $1 }; }
 
     # Maths. ORDER MATTERS.
-    elsif ( $sourcecode =~ s[^[+]][] ) { push @tokens, { token => 'OP_ADD', }; }
-    elsif ( $sourcecode =~ s[^\**][] ) { push @tokens, { token => 'OP_POW', } }
-    elsif ( $sourcecode =~ s[^\*][] )  { push @tokens, { token => 'OP_MUL', } }
-    elsif ( $sourcecode =~ s[/][] )    { push @tokens, { token => 'OP_DIV', } }
-    elsif ( $sourcecode =~ s[^-(\s+)][] ) {
-        push @tokens,
-          (
-            { token => 'OP_SUB', },
-            { token => 'SPACE', raw => $1, }
-          );
-    }
+    # tidyoff
+#    elsif ( $sourcecode =~ s[^[+]{2}][] ) { push @tokens,    { token => 'OP_INCR' }; }
+#    elsif ( $sourcecode =~ s[^[+]][] )    { push @tokens,    { token => 'OP_ADD', }; }
+#    elsif ( $sourcecode =~ s[^\**][] )    { push @tokens,    { token => 'OP_POW', }; }
+    elsif ( $sourcecode =~ s[^\*][] )     { push @tokens,    { token => 'OP_MUL', }; }
+#    elsif ( $sourcecode =~ s[/][] )       { push @tokens,    { token => 'OP_DIV', }; }
+#    elsif ( $sourcecode =~ s[^--][] )     { push @tokens,    { token => 'OP_DECR', }; }
+#    elsif ( $sourcecode =~ s[^-(\s+)][] ) { push @tokens, (  { token => 'OP_SUB', },
+#                                                             { token => 'SPACE',
+#                                                               raw   => $1, } ); }
+    # tidyon
 
     # Non-interpolating strings. I'm sorry.
     elsif ( $sourcecode =~ s[^'][] ) {
@@ -91,11 +99,13 @@ while ( $sourcecode !~ /^$/ ) {
         push @tokens, { token => 'end non-interpolating string' };
     }
 
-    else { print "found something I couldn't lex. Here's what I've got so far:\n"; print Dumper(@tokens); die; }
+    else {
+        say "found something I couldn't lex. Here are the literals what I've found so far:\n";
+        my @raws = grep { exists $_->{raw} || $_->{token} eq 'OP_ACCESS' } @tokens;
+        print Data::Dumper::Dumper(@raws);
+        die;
+    }
 }
-
-# use Data::Dumper;
-# print Dumper(@tokens);
 
 print "I found these identifiers:\n";
 
