@@ -54,7 +54,7 @@ class TronBit;
 
         if ( .state ) { .color = '#FF0000'; }
         else          { .color = '#0000FF'; }
-        .nistring = 'foo\'bar';
+#        .nistring = 'foo\'bar';
     }
     return self;
 }
