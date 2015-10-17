@@ -16,6 +16,7 @@ our @table = (
     [ qr/^[.]/,                     'DOT' ],
     [ qr/^:/,                       'COLON' ],
     [ qr/^(\d+)/,                   'DIGITS' ],
+    [ qr/^\\/,                      'ESC' ],
 
     # Comparison
     # TODO: Heredocs; binary shifting.
