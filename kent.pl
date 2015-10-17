@@ -3,6 +3,7 @@ package Kent;
 use common::sense;
 
 use Kent::Lexer  ();
+use Kent::Parser ();
 use Data::Dumper ();
 
 script(@ARGV) unless caller;
@@ -17,7 +18,8 @@ sub script {
     my $sourcecode;
     my $filename = shift @args;
     {
-        open( my $fh, '<', $filename ) or die "Couldn't open $filename for reading: $!";
+        open( my $fh, '<', $filename )
+          or die "Couldn't open $filename for reading: $!";
         local $/;
         $sourcecode = (<$fh>);
         close $fh;
@@ -25,9 +27,8 @@ sub script {
 
     say "loaded source code from $filename";
 
-    my $stack = Kent::Lexer->new($sourcecode);
-    $stack->lex;
-    $stack->barf;
+    my $tokens = Kent::Lexer->new($sourcecode)->lex;
+    my $ast    = Kent::Parser->new($tokens)->parse;
 
     return 1;
 }

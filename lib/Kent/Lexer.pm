@@ -23,7 +23,8 @@ sub lex {
     my $matchfound;
 
     while ( $self->{sourcecode} !~ /^$/ ) {
-#    for (1..10) {
+
+        #    for (1..10) {
         $matchfound = 0;
 
         foreach my $rule (@rules) {
@@ -31,23 +32,22 @@ sub lex {
             my $action = $rule->[1];
 
             if ( $self->{sourcecode} =~ s/$regex// ) {
-                say "$action \t$self->{line}, \t$self->{column}";
                 $self->$action($1);
                 $matchfound++;
                 last;
             }
         }
-        if (!$matchfound) { return 0; }
+        if ( !$matchfound ) { return 0; }
     }
-    return 1;
+    return $self->{tokens};
 }
 
 sub barf {
     my ($self) = @_;
 
-    foreach my $token (@{ $self->{tokens} }) {
+    foreach my $token ( @{ $self->{tokens} } ) {
         print "[$token->{line}, $token->{column}] $token->{name} ";
-        if (exists $token->{raw}) { print "($token->{raw})"; }
+        if ( exists $token->{raw} ) { print "($token->{raw})"; }
         print "\n";
     }
     return 1;
@@ -342,7 +342,7 @@ sub OP_SCOPE_END {
 }
 
 sub COMMENT {
-    my ($self, $raw) = @_;
+    my ( $self, $raw ) = @_;
     push @{ $self->{tokens} },
       {
         'name'   => 'COMMENT',
