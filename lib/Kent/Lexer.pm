@@ -1,6 +1,7 @@
 package Kent::Lexer;
 
-use Kent::Lexer::Rules ();
+use Kent::Lexer::Rules    ();
+use Kent::Lexer::Keywords ();
 use common::sense;
 
 sub new {
@@ -128,9 +129,15 @@ sub NEWLINE {
 
 sub ID {
     my ( $self, $raw ) = @_;
+
+    my $id;
+
+    if ( $Kent::Lexer::Keywords::keywords{$raw}) {        $id = "KW_$raw"; }
+    else { $id = 'ID'; }
+#    my $id = exists $Kent::Lexer::Keywords::keywords{$raw} ? "KW_$raw" : 'ID';
     push @{ $self->{tokens} },
       {
-        'name'   => 'ID',
+        'name'   => $id,
         'raw'    => $raw,
         'line'   => $self->{line},
         'column' => $self->{column},
@@ -192,6 +199,18 @@ sub ESC {
 #############################################################################
 ##  COMPARISON  #############################################################
 #############################################################################
+
+sub OP_NCMP {
+    my ($self) = @_;
+    push @{ $self->{tokens} },
+      {
+        'name'   => 'OP_NCMP',
+        'line'   => $self->{line},
+        'column' => $self->{column},
+      };
+    $self->{column} += 3;
+    return 1;
+}
 
 sub OP_EQ {
     my ($self) = @_;

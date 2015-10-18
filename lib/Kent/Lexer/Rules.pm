@@ -20,11 +20,12 @@ our @table = (
 
     # Comparison
     # TODO: Heredocs; binary shifting.
-    [ qr/^==/, 'OP_EQ' ],
-    [ qr/^=</, 'OP_LE' ],
-    [ qr/^</,  'OP_LT' ],
-    [ qr/^>=/, 'OP_GE' ],
-    [ qr/^>/,  'OP_GT' ],
+    [ qr/^<=>/, 'OP_NCMP' ],
+    [ qr/^==/,  'OP_EQ' ],
+    [ qr/^=</,  'OP_LE' ],
+    [ qr/^</,   'OP_LT' ],
+    [ qr/^>=/,  'OP_GE' ],
+    [ qr/^>/,   'OP_GT' ],
 
     # Basic Syntax
     [ qr/^=/,  'OP_SET' ],
