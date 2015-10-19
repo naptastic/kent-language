@@ -4,8 +4,8 @@ use common::sense;
 use Kent::Lexer::Rules    ();
 use Kent::Lexer::Keywords ();
 
-my $rules    = Kent::Lexer::Rules::table;
-my %keywords = %Kent::Lexer::Keywords::keywords;
+my $rule_table = Kent::Lexer::Rules::table;
+my %keywords   = %Kent::Lexer::Keywords::keywords;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -17,8 +17,11 @@ sub new {
         'column' => $args{column},
     };
 
+    # select * from rules where 'name' = $name limit 1;
+    my $rule = ( grep { $_->{name} eq $self->{name} } @$rule_table )[0];
+
     # Variable-width tokens use 'undef' in the token definition table.
-    $self->{width} = $rules->{ $self->{name} }{width};
+    $self->{width} = $rule->{width};
     $self->{width} //= length( $self->{raw} );
 
     # Is this a keyword?

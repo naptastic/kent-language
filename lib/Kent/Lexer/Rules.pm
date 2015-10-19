@@ -3,15 +3,19 @@ package Kent::Lexer::Rules;
 use common::sense;
 
 # Regex matching token
-# Token name
+# Token name - MUST be unique (right now).
 # Width, or undef for tokens that vary in width
 
 my @rules = (
 
     # Quoting
-    [ qr/^'/, 'Q',  1 ],
-    [ qr/^"/, 'DQ', 2 ],
-    [ qr/^`/, 'BQ', 2 ],
+    [ qr/^'/,         'SQ',  1 ],
+    [ qr/^"/,         'DQ',  1 ],
+    [ qr/^`/,         'BQ',  1 ],
+    [ qr/^q<>['"]/,   'Q_A', 4 ],    # Quote with Angle brackets
+    [ qr/^q\[\]['"]/, 'Q_B', 4 ],    # Quote with Brackets
+    [ qr/^q{}['"]/,   'Q_C', 4 ],    # Quote with Curly braces
+    [ qr/^q\(\)['"]/, 'Q_P', 4 ],    # Quote with Parenthesis
 
     # Basics
     [ qr/^([\t\f\r ]+)/,            'SPACE',   undef ],
