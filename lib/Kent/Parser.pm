@@ -6,25 +6,25 @@ use Data::Dumper;
 
 sub new {
 
-    # $tokens should be a Lexer object
+    # $tokens is an arrayref full of Kent::Token objects.
     my ( $class, $tokens ) = @_;
 
     return bless {
         'stack'  => [],
         'tokens' => $tokens,
     }, $class;
+
 }
 
 sub parse {
     my ( $self, $tokens ) = @_;
 
-    #    while ( scalar @$tokens ) {
+    # while ( scalar @$tokens ) {
     for ( 1 .. 10 ) {
 
         $self->push( shift @{ $self->{tokens} } );
         my $phrase = $self->join();    # don't wanna do this a hundred times
         say $self->join(q{ });
-        # say scalar @{ $self->{stack} };
 
       APPLYRULES:
         foreach my $rule (@Kent::Parser::Rules::rules) {

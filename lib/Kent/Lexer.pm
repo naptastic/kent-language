@@ -24,10 +24,6 @@ sub lex {
     my $rule_table = Kent::Lexer::Rules::table;
     my $rule_list  = Kent::Lexer::Rules::list;
 
-    say "Lexer initiated.";
-    say "Rule count                     : " . scalar @$rule_list;
-    say "Rule count (should be the same): " . scalar keys %$rule_table;
-
     my $matchfound;
 
     while ( $self->{sourcecode} !~ /^$/ ) {
@@ -58,8 +54,18 @@ sub lex {
                 last;
             }
         }
+
+        # When the lexer can handle everything, this will go away.
         if ( !$matchfound ) { return 0; }
     }
+
+    push @{ $self->{tokens} },
+      Kent::Token->new(
+        'name'   => 'EOF',
+        'line'   => $self->{line},
+        'column' => $self->{column},
+      );
+
     return $self->{tokens};
 }
 
