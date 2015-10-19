@@ -130,11 +130,7 @@ sub NEWLINE {
 sub ID {
     my ( $self, $raw ) = @_;
 
-    my $id;
-
-    if ( $Kent::Lexer::Keywords::keywords{$raw}) {        $id = "KW_$raw"; }
-    else { $id = 'ID'; }
-#    my $id = exists $Kent::Lexer::Keywords::keywords{$raw} ? "KW_$raw" : 'ID';
+    my $id = exists $Kent::Lexer::Keywords::keywords{$raw} ? "KW_$raw" : 'ID';
     push @{ $self->{tokens} },
       {
         'name'   => $id,
