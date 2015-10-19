@@ -54,18 +54,16 @@ my @rules = (
 
 );
 
-sub list {
-    return [ map { $_->[1] } @rules];
-}
-
 sub table {
-    my $table = {};
+    my $table = [];
     foreach my $rule_ar (@rules) {
-        $table->{ $rule_ar->[1] } = {
+        push @$table,
+          {
             'regex' => $rule_ar->[0],
             'name'  => $rule_ar->[1],
             'width' => $rule_ar->[2],
-        };
+          };
+
     }
     return $table;
 }

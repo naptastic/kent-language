@@ -22,7 +22,6 @@ sub lex {
     my ($self) = @_;
 
     my $rule_table = Kent::Lexer::Rules::table;
-    my $rule_list  = Kent::Lexer::Rules::list;
 
     my $matchfound;
 
@@ -30,8 +29,7 @@ sub lex {
 
         $matchfound = 0;
 
-        foreach my $rule_name (@$rule_list) {
-            my $rule = $rule_table->{$rule_name};
+        foreach my $rule (@$rule_table) {
 
             if ( $self->{sourcecode} =~ s/$rule->{regex}// ) {
                 my $newtoken = Kent::Token->new(
@@ -67,6 +65,12 @@ sub lex {
       );
 
     return $self->{tokens};
+}
+
+sub lex_code {
+    my ($self) = @_;
+
+
 }
 
 sub barf {
