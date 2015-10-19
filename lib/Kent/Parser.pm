@@ -24,6 +24,7 @@ sub parse {
         $self->push( shift @{ $self->{tokens} } );
         my $phrase = $self->join();    # don't wanna do this a hundred times
         say $self->join(q{ });
+        # say scalar @{ $self->{stack} };
 
       APPLYRULES:
         foreach my $rule (@Kent::Parser::Rules::rules) {
@@ -53,7 +54,7 @@ sub pop {
 sub join {
     my ( $self, $string ) = @_;
     $string // q{};
-    return join( $string, map { $_->{name} } @{ $self->{stack} } );
+    return join( $string, map { $_->name } @{ $self->{stack} } );
 }
 
 1;

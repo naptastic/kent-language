@@ -1,7 +1,8 @@
 package Kent::Lexer;
 
-use Kent::Lexer::Rules    ();
 use Kent::Lexer::Keywords ();
+use Kent::Lexer::Rules    ();
+use Kent::Token           ();
 use common::sense;
 
 sub new {
@@ -20,21 +21,40 @@ sub new {
 sub lex {
     my ($self) = @_;
 
-    my @rules = @Kent::Lexer::Rules::table;
+    my $rule_table = Kent::Lexer::Rules::table;
+    my $rule_list  = Kent::Lexer::Rules::list;
+
+    say "Lexer initiated.";
+    say "Rule count                     : " . scalar @$rule_list;
+    say "Rule count (should be the same): " . scalar keys %$rule_table;
+
     my $matchfound;
 
     while ( $self->{sourcecode} !~ /^$/ ) {
 
-        #    for (1..10) {
         $matchfound = 0;
 
-        foreach my $rule (@rules) {
-            my $regex  = $rule->[0];
-            my $action = $rule->[1];
+        foreach my $rule_name (@$rule_list) {
+            my $rule = $rule_table->{$rule_name};
 
-            if ( $self->{sourcecode} =~ s/$regex// ) {
-                $self->$action($1);
+            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) {
+                my $newtoken = Kent::Token->new(
+                    'name'   => $rule->{name},
+                    'raw'    => $1,
+                    'line'   => $self->{line},
+                    'column' => $self->{column},
+                );
+
                 $matchfound++;
+
+                if ( $newtoken->width == -1 ) {
+                    $self->{line}++;
+                    $self->{column} = 1;
+                }
+                else { $self->{column} += $newtoken->width; }
+
+                push @{ $self->{tokens} }, $newtoken;
+
                 last;
             }
         }
@@ -51,409 +71,6 @@ sub barf {
         if ( exists $token->{raw} ) { print "($token->{raw})"; }
         print "\n";
     }
-    return 1;
-}
-
-#############################################################################
-##  QUOTING  ################################################################
-#############################################################################
-
-sub Q {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'Q',
-        'raw'    => $raw,
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub DQ {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'DQ',
-        'raw'    => $raw,
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub BQ {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'BQ',
-        'raw'    => $raw,
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-#############################################################################
-##  THE BASICS  #############################################################
-#############################################################################
-
-sub SPACE {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'SPACE',
-        'raw'    => $raw,
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += length($raw);
-    return 1;
-}
-
-sub NEWLINE {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'NEWLINE',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{line}++;
-    $self->{column} = 0;
-    return 1;
-}
-
-sub ID {
-    my ( $self, $raw ) = @_;
-
-    my $id = exists $Kent::Lexer::Keywords::keywords{$raw} ? "KW_$raw" : 'ID';
-    push @{ $self->{tokens} },
-      {
-        'name'   => $id,
-        'raw'    => $raw,
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += length($raw);
-    return 1;
-}
-
-sub DOT {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'DOT',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub COLON {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'COLON',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub DIGITS {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'DIGITS',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-        'raw'    => $raw,
-      };
-    $self->{column} += length($raw);
-    return 1;
-}
-
-sub ESC {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'ESC',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-        'raw'    => $raw,
-      };
-    $self->{column}++;
-    return 1;
-}
-
-#############################################################################
-##  COMPARISON  #############################################################
-#############################################################################
-
-sub OP_NCMP {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_NCMP',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 3;
-    return 1;
-}
-
-sub OP_EQ {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_EQ',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub OP_LE {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_LE',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub OP_LT {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_LT',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_GE {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_GE',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub OP_GT {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_GT',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-#############################################################################
-##  BASIC SYNTAX  ###########################################################
-#############################################################################
-
-sub OP_SET {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_SET',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_SEMI {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_SEMI',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_EXPR_START {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_EXPR_START',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_EXPR_END {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_EXPR_END',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_NEXT {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_NEXT',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_SCOPE_START {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_SCOPE_START',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_SCOPE_END {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_SCOPE_END',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub COMMENT {
-    my ( $self, $raw ) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'COMMENT',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-        'raw'    => $raw,
-      };
-    $self->{column} += length($raw);
-    return 1;
-}
-
-#############################################################################
-##  MATH  ###################################################################
-#############################################################################
-
-sub OP_INCR {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_INCR',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub OP_ADD {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_ADD',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_POW {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_POW',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub OP_MUL {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_MUL',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_DIV {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_DIV',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
-    return 1;
-}
-
-sub OP_DECR {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'OP_DECR',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column} += 2;
-    return 1;
-}
-
-sub MINUS {
-    my ($self) = @_;
-    push @{ $self->{tokens} },
-      {
-        'name'   => 'MINUS',
-        'line'   => $self->{line},
-        'column' => $self->{column},
-      };
-    $self->{column}++;
     return 1;
 }
 
