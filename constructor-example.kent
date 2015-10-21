@@ -1,4 +1,4 @@
-Class Position;
+class Position;
 
 .new ( Number x, Number y, Number z ) {
     new Object self;
@@ -21,13 +21,13 @@ Class Position;
     .z += dz;
 }
 
-Class Color;
+class Color;
 
 .new {
 
 }
 
-Class TronBit;
+class TronBit;
 
 .new ( Position pos, Bool state ) {
     new Object self;
@@ -42,7 +42,7 @@ Class TronBit;
         with .pos {
             # throw a conniption if new object would be more than 1km from
             # the origin.
-            (.x * .x + .y * .y + .z * .z) ^ .5 mustbe < 1000
+            (.x * .x + .y * .y + .z * .z) ** .5 must < 1000
         }
 
         # Here's another. We will decorate .pos with a 'distance' numeric
@@ -50,10 +50,11 @@ Class TronBit;
         # origin.
 
         .pos.distance.enum = { return (.x * .x + .y * .y + .z * .z); }
-        .pos.distance mustbe < 1000;
+        .pos.distance must < 1000;
 
         if ( .state ) { .color = '#FF0000'; }
         else          { .color = '#0000FF'; }
+#        .nistring = 'foo\'bar';
     }
     return self;
 }
