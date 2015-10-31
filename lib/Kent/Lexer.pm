@@ -20,35 +20,24 @@ sub new {
 
 sub lex {
     my ($self) = @_;
-
     my $rule_table = Kent::Lexer::Rules::table;
-
     my $matchfound;
 
     while ( $self->{sourcecode} !~ /^$/ ) {
-
         $matchfound = 0;
 
         foreach my $rule (@$rule_table) {
 
-            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) {
-                my $newtoken = Kent::Token->new(
-                    'name'   => $rule->{name},
-                    'raw'    => $1,
-                    'line'   => $self->{line},
-                    'column' => $self->{column},
-                );
-
+            if ( ref $rule->{regex} eq 'Regexp'
+                && $self->{sourcecode} =~ s/$rule->{regex}// ) {
+                $self->store( $rule, $1 );
                 $matchfound++;
+                last;
+            }
 
-                if ( $newtoken->width == -1 ) {
-                    $self->{line}++;
-                    $self->{column} = 1;
-                }
-                else { $self->{column} += $newtoken->width; }
-
-                push @{ $self->{tokens} }, $newtoken;
-
+            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) {
+                $self->store( $rule, $rule->{regex} );
+                $matchfound++;
                 last;
             }
         }
@@ -67,10 +56,25 @@ sub lex {
     return $self->{tokens};
 }
 
-sub lex_code {
-    my ($self) = @_;
+sub store {
+    my ( $self, $rule, $raw ) = @_;
 
+    my $newtoken = Kent::Token->new(
+        'name'   => $rule->{name},
+        'raw'    => $1,
+        'line'   => $self->{line},
+        'column' => $self->{column},
+    );
 
+    if ( $newtoken->width == -1 ) {
+        $self->{line}++;
+        $self->{column} = 1;
+    }
+    else { $self->{column} += $newtoken->width; }
+
+    push @{ $self->{tokens} }, $newtoken;
+
+    return 1;
 }
 
 sub barf {

@@ -10,17 +10,17 @@ use common::sense;
 my @code_rules = (
 
     # Quoting
-    [ qr/^(')/,    'q_1',  1 ],
-    [ qr/^(")/,    'q_2',  1 ],
-    [ qr/^(`)/,    'q_B',  1 ],
-    [ qr/^(<")/,   'qb_A', 4 ],    # Quote with Angle brackets
-    [ qr/^({")/,   'qb_C', 4 ],    # Quote with Curly braces
-    [ qr/^(\(")/,  'qb_P', 4 ],    # Quote with Parenthesis
-    [ qr/^(\[")/,  'qb_S', 4 ],    # Quote with Square brackets
-    [ qr/^(">)/,   'qe_A', 4 ],    # Quote with Angle brackets
-    [ qr/^("})/,   'qe_C', 4 ],    # Quote with Curly braces
-    [ qr/^(\"\))/, 'qe_P', 4 ],    # Quote with Parenthesis
-    [ qr/^(\"\\)/, 'qe_S', 4 ],    # Quote with Square brackets
+    [ "'",  'q_1',  1 ],
+    [ '"',  'q_2',  1 ],
+    [ '`',  'q_B',  1 ],
+    [ '<"', 'qb_A', 2 ],    # Quote with Angle brackets
+    [ '{"', 'qb_C', 2 ],    # Quote with Curly braces
+    [ '("', 'qb_P', 2 ],    # Quote with Parenthesis
+    [ '["', 'qb_S', 2 ],    # Quote with Square brackets
+    [ '">', 'qe_A', 2 ],    # Quote with Angle brackets
+    [ '"}', 'qe_C', 2 ],    # Quote with Curly braces
+    [ '")', 'qe_P', 2 ],    # Quote with Parenthesis
+    [ '"]', 'qe_S', 2 ],    # Quote with Square brackets
 
     # Basics
     [ qr/^([\t\f\r ]+)/,            's_SPACE',   undef ],
