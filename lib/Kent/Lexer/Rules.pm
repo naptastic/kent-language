@@ -26,56 +26,55 @@ my @code_rules = (
     [ qr/^([\t\f\r ]+)/,            's_SPACE',   undef ],
     [ qr/^(\n)/,                    's_NEWLINE', -1 ],
     [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',      undef ],
-    [ qr/^([.])/,                   's_DOT',     1 ],
-    [ qr/^(:)/,                     's_COLON',   1 ],
+    [ '.',                          's_DOT',     1 ],
+    [ ':',                          's_COLON',   1 ],
     [ qr/^(\d+)/,                   's_DIGITS',  undef ],
-    [ qr/^(\\)/,                    's_ESC',     1 ],
+    [ '\\',                         's_ESC',     1 ],
 
     # Comparison
     # TODO: Heredocs; binary shifting.
-    [ qr/^(<=>)/, 'o_NCMP', 3 ],
-    [ qr/^(==)/,  'o_EQ',   2 ],
-    [ qr/^(=<)/,  'o_LE',   2 ],
-    [ qr/^(>=)/,  'o_GE',   2 ],
-    [ qr/^(<)/,   'o_LT',   1 ],
-    [ qr/^(>)/,   'o_GT',   1 ],
+    [ '<=>', 'o_NCMP', 3 ],
+    [ '==',  'o_EQ',   2 ],
+    [ '=<',  'o_LE',   2 ],
+    [ '>=',  'o_GE',   2 ],
+    [ '<',   'o_LT',   1 ],
+    [ '>',   'o_GT',   1 ],
 
     # Basic Syntax
-    [ qr/^(=)/,  'o_SET',         1 ],
-    [ qr/^(;)/,  'o_SEMI',        1 ],
-    [ qr/^(\()/, 'o_EXPR_BEGIN',  1 ],
-    [ qr/^(\))/, 'o_EXPR_END',    1 ],
-    [ qr/^(,)/,  'o_NEXT',        1 ],
-    [ qr/^({)/,  'o_SCOPE_BEGIN', 1 ],
-    [ qr/^(})/,  'o_SCOPE_END',   1 ],
+    [ '=', 'o_SET',         1 ],
+    [ ';', 'o_SEMI',        1 ],
+    [ '(', 'o_EXPR_BEGIN',  1 ],
+    [ ')', 'o_EXPR_END',    1 ],
+    [ ',', 'o_NEXT',        1 ],
+    [ '{', 'o_SCOPE_BEGIN', 1 ],
+    [ '}', 'o_SCOPE_END',   1 ],
 
     # Comments
     [ qr/^(#[^\n]*)/, 'COMMENT', undef ],
 
-    # Math
-    [ qr/^(\+\+)/, 'o_INCR',  2 ],
-    [ qr/^(\+)/,   'o_ADD',   1 ],
-    [ qr/^(\*\*)/, 'o_POW',   2 ],
-    [ qr/^(\*)/,   'o_MUL',   1 ],
-    [ qr{^(/)},    'o_DIV',   1 ],
-    [ qr/^(--)/,   'o_DECR',  2 ],
-    [ qr/^(-)/,    's_MINUS', 1 ],
-
+    # Arithmetic
+    [ '++', 'o_INCR',  2 ],
+    [ '+',  'o_ADD',   1 ],
+    [ '**', 'o_POW',   2 ],
+    [ '*',  'o_MUL',   1 ],
+    [ '/',  'o_DIV',   1 ],
+    [ '--', 'o_DECR',  2 ],
+    [ '-',  's_MINUS', 1 ],
 );
 
 my @str_1_rules = (
 
-    [ qr/(\\')/, 'n_ESCQ', 2 ],
-    [ qr/(')/,   'n_EOS',  1 ],
-    [ qr/(.)/,   'n_char', 1 ],
+    [ q{\\'},   'n_ESCQ', 2 ],
+    [ q{'},     'n_EOS',  1 ],
+    [ qr/^(.)/, 'n_char', 1 ],
 
 );
 
 my @str_C_rules = (
 
-    [ qr/^(\\")/, 'i_ESCQ', 1 ],
-    [ qr/^({)/,   'o_ADD',  1 ],
-    [ qr/^(.)/,   'char',   1 ],
+    [ q{\\"},   'i_ESCQ', 1 ],
+    [ '{',      'o_ADD',  1 ],
+    [ qr/^(.)/, 'char',   1 ],
 
 );
 
