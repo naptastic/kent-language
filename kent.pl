@@ -9,7 +9,8 @@ use Data::Dumper ();
 script(@ARGV) unless caller;
 
 sub new {
-    return 1;
+    my ($class) = @_;
+    return bless {}, $class;
 }
 
 sub script {
@@ -17,6 +18,7 @@ sub script {
 
     my $sourcecode;
     my $filename = shift @args;
+
     {
         open( my $fh, '<', $filename )
           or die "Couldn't open $filename for reading: $!";
@@ -33,3 +35,4 @@ sub script {
     return 1;
 }
 
+1;

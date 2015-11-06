@@ -10,3 +10,9 @@ Core Classes:
 Provided Libraries:
     STDIO
     ? ? ?
+
+Serialization Formats:
+    JSON
+    YAML
+    CSV
+    XML (the whole SGML-derived family... oerrgggg)
