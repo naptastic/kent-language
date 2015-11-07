@@ -1,38 +1,31 @@
-I need a better example class.... heredocs aren't shown yet, which I really
-want shown. Lots of other omissions, like first-class functions, ternaries,
-idk what else...
-
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: Option A - basically Python
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 class Position;
 
-.new ( Number x, Number y, Number z )
-    new Object self
+.new ( Number x, Number y, Number z ) {
+    new Object self;
 
-    /* accept arguments and store them
-       as internal state because redundant
-       comments are redundant. */
+    with self {
+        .x = x;
+        .y = y;
+        .z = z;
+    }
+    return self;
+}
 
-    with self
-        .x = x
-        .y = y
-        .z = z
+.distance {
+    return (.x * .x + .y * .y + .z * z) ** .5;
+}
 
-    return self
+.move ( Number dx, Number dy, Number dz ) {
+    .x += dx;
+    .y += dy;
+    .z += dz;
+}
 
-.distance
-    return (.x * .x + .y * .y + .z * z) ** .5
+class Color;
 
-.move ( Number dx, Number dy, Number dz, )
-    .x += dx
-    .y += dy
-    .z += dz
+.new {
 
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-:: Option B - basically K & R style
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+}
 
 class TronBit;
 
@@ -49,7 +42,7 @@ class TronBit;
         with .pos {
             # throw a conniption if new object would be more than 1km from
             # the origin.
-            (.x * .x + .y * .y + .z * .z) ** .5 must < 1000;
+            (.x * .x + .y * .y + .z * .z) ** .5 must < 1000
         }
 
         # Here's another. We will decorate .pos with a 'distance' numeric
@@ -61,9 +54,7 @@ class TronBit;
 
         if ( .state ) { .color = '#FF0000'; }
         else          { .color = '#0000FF'; }
-
-        # this doesn't lex properly right now so it's commented out
-        # .nistring = 'foo\'bar';
+#        .nistring = 'foo\'bar';
     }
     return self;
 }
