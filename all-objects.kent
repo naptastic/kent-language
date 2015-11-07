@@ -1,0 +1,11 @@
+# These are functionally the same.
+
+foo.a = 4;
+foo.a = { return 4 };
+
+# Note the lack of semicolon in the second example. It's not necessary
+# because semicolons are a statement *SEPARATOR* rather than a statement
+# *TERMINATOR*. My guideline will be, (unless I decide to go without
+# semicolons) that you SHOULD only omit them in cases like these, where
+# you have { ONE STATEMENT } on a single line.
+
