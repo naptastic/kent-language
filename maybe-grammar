@@ -1,0 +1,13 @@
+id    := id? '.' id
+
+term  := id
+      |  Number
+      |  String
+      |  Code Block
+      |  '(' expr ')'
+
+expr  := term op term
+
+stmt  := expr ';'
+
+block := '{' stmt* expr? '}'
