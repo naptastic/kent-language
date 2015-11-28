@@ -6,10 +6,9 @@ table = [ [ 1, 'David', 'Houston'   ],
           [ 2, 'Marco', 'Cuba'      ],
           [ 3, 'Carla', 'Manhattan' ], ];
 
-table.each {
-    .id   = { return .[0] };
-    .name = { return .[1] };
-    .city = { return .[2] } };
+table.each { .id   = { return .[0] };
+             .name = { return .[1] };
+             .city = { return .[2] } };
 
 # this says 'Manhattan'
 say table.[2].city;

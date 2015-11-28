@@ -1,13 +1,12 @@
-
 /* Generator example
    See http://www.paulgraham.com/accgen.html for details of the challenge.
-   This is not, by any measure, the "best" generator, except for one: 
+   By only one measure is it the "best" generator:
    It is the most Kent-like. */
 
-adder <- Object;
-adder.generate = {
+acc <- Object;
+acc.generate = {
     x = args[0];
-    return { return x + args[0] } }
+    return { return x += args[0] } }
 
 foo <- Object;
 
@@ -26,7 +25,7 @@ foo.catter(4);
 /* Because the x object inside the function is a string,
    it will stringify the number 4. If generating a string
    concatenator is undesirable, then a simple
-   
+
    x must be String;
-   
+
    inside the generator would prevent these shenanigans. */

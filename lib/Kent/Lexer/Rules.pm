@@ -10,9 +10,13 @@ use common::sense;
 my @code_rules = (
 
     # Quoting
-    [ "'",  'q_1',  1 ],
-    [ '"',  'q_2',  1 ],
-    [ '`',  'q_B',  1 ],
+    [ "'", 'q_1', 1 ],
+    [ '"', 'q_2', 1 ],
+    [ '`', 'q_B', 1 ],
+
+    # p.sure I don't like where this is going. Basically all of these
+    # introduce ambiguities into the language which require whitespace
+    # to resolve. I don't think I want to set that precedent.
     [ '<"', 'qb_A', 2 ],    # Quote with Angle brackets
     [ '{"', 'qb_C', 2 ],    # Quote with Curly braces
     [ '("', 'qb_P', 2 ],    # Quote with Parenthesis
@@ -53,14 +57,15 @@ my @code_rules = (
     [ qr/^(#[^\n]*)/, 'COMMENT', undef ],
 
     # Arithmetic
-    [ '++', 'o_INCR',  2 ],
-    [ '+',  'o_ADD',   1 ],
-    [ '**', 'o_POW',   2 ],
-    [ '*',  'o_MUL',   1 ],
-    [ '/',  'o_DIV',   1 ],
-    [ '--', 'o_DECR',  2 ],
-    [ '-',  's_MINUS', 1 ],
-);
+    [ '++', 'o_INCR_1', 2 ],
+    [ '+=', 'o_INCR',   2 ],
+    [ '+',  'o_ADD',    1 ],
+    [ '**', 'o_POW',    2 ],
+    [ '*',  'o_MUL',    1 ],
+    [ '/',  'o_DIV',    1 ],
+    [ '--', 'o_DECR_1', 2 ],
+    [ '-=', 'o_DECR',   2 ],
+    [ '-',  's_MINUS',  1 ], );
 
 my @str_1_rules = (
 
@@ -78,21 +83,34 @@ my @str_C_rules = (
 
 );
 
+# Not sure I like where this is going.
+# tidyoff
+my %pairs = ( qw| ' ' " " < > ( ) [ ]
+                  « » ᚛ ᚜ “ ” ‟ ” ‹ ›
+                  ⁅ ⁆ ∈ ∋ ∊ ∍ ≒ ≓ ≤ ≥
+                  ≶ ≷ ≺ ≻ ≼ ≽ ⊂ ⊃ ⊆ ⊇
+                  ⊊ ⊋ ⊏ ⊐ ⊑ ⊒ ⊢ ⊣ ⊦ ⫞
+                  ⊰ ⊱ ⊲ ⊳ ⊴ ⊵ ⋐ ⋑ ⋖ ⋗
+                  ⋘ ⋙ ⋚ ⋛ ⋜ ⋝ ⋞ ⋟ ⋠ ⋡
+                  ⋢ ⋣ ⋤ ⋥ ⋰ ⋱ ⟅ ⟆ ⟦ ⟧
+                  ⟪ ⟫ ⦑ ⦒ ⧘ ⧙ ⧼ ⧽ ⪿ ⫀
+                  ⫁ ⫂ ⫕ ⫖ ⸄ ⸅ ⸠ ⸡ ｢ ｣ | );
+# tidyon
+
+# Make all pairs symmetric; IOW, they can be used in either direction.
+foreach ( sort keys %pairs ) { $pairs{ $pairs{ $_ } } = $_; }
+
 sub table {
-    my ($context) = @_;
+    my ( $context ) = @_;
     $context //= 'code';
 
+    #tidyoff
     my $table = [];
-    foreach my $rule_ar ( @{code_rules} ) {
-        push @$table,
-          {
-            'regex' => $rule_ar->[0],
-            'name'  => $rule_ar->[1],
-            'width' => $rule_ar->[2],
-          };
-
-    }
+    push @$table, { 'regex' => $_->[0],
+                    'name'  => $_->[1],
+                    'width' => $_->[2], } foreach @{code_rules};
     return $table;
+    #tidyon
 }
 
 1;
