@@ -6,20 +6,20 @@ use Kent::Token           ();
 use Kent::Util            ();
 use common::sense;
 
+# sourcecode:   a string to tokenize. You should probably load the whole file.
+# context:      the name of the set of rules for the lexer to use.
+# ending_token: When this token is found, ... aw, shit.
 sub new {
-    my ( $class, $sourcecode ) = @_;
+    my ( $class ) = @_;
 
-    my $self = { sourcecode => $sourcecode,
-                 tokens     => [],
-                 line       => 1,
-                 column     => 1, };
-
-    return bless $self, $class;
+    return  bless { line       => 1,
+                    column     => 1, }, $class;
 }
 
+# Don't use this anymore.
 sub lex {
     my ( $self ) = @_;
-    my $rule_table = Kent::Lexer::Rules::table;
+    my $rule_table = $self->{rule_table};
     my $matchfound;
 
     while ( length $self->{sourcecode} ) {
@@ -50,29 +50,33 @@ sub lex {
     }
 
     push @{ $self->{tokens} },
-        Kent::Token->new( 'name'   => 'EOF',
-                          'line'   => $self->{line},
-                          'column' => $self->{column}, );
+        Kent::Token->new( name   => 'EOF',
+                          line   => $self->{line},
+                          column => $self->{column}, );
 
     return $self->{tokens};
+}
+
+sub next {
+    my ( $self, $rules, $source_ref ) = @_;
+#    my $rule_table = Kent::Lexer::Rules::table($context);
+
+    foreach my $rule ( @{ $rules } ) {
+
+        if ( ref $rule->{regex}     eq 'Regexp'
+            && ${ $source_ref } =~ s/$rule->{regex}// )
+        { return $self->_make_token( $rule, $1 ) }
+
+        if ( ${ $source_ref } =~ s/^\Q$rule->{regex}\E// )
+        { return $self->_make_token( $rule, $1 ) }
+    }
+
 }
 
 sub store {
     my ( $self, $rule, $raw ) = @_;
 
-    my $newtoken = Kent::Token->new( 'name'   => $rule->{name},
-                                     'raw'    => $1,
-                                     'line'   => $self->{line},
-                                     'column' => $self->{column}, );
-
-    if ( $newtoken->width == -1 ) {
-        $self->{line}++;
-        $self->{column} = 1;
-    }
-    else { $self->{column} += $newtoken->width; }
-
-    say Kent::Util::dump( $newtoken );
-    push @{ $self->{tokens} }, $newtoken;
+    push @{ $self->{tokens} }, $self->_make_token( $rule, $raw );
 
     return 1;
 }
@@ -86,6 +90,25 @@ sub barf {
         print "\n";
     }
     return 1;
+}
+
+sub _make_token {
+    my ( $self, $rule, $raw ) = @_;
+
+    my $newtoken = Kent::Token->new( name         => $rule->{name},
+                                     raw          => $raw,
+                                     line         => $self->{line},
+                                     column       => $self->{column},
+                                     next_context => $rule->{next_context}, );
+
+    if ( $newtoken->name eq 's_NEWLINE' ) {
+        $self->{line}++;
+        $self->{column} = 1;
+    } else {
+        $self->{column} += $newtoken->width;
+    }
+
+    return $newtoken;
 }
 
 1;

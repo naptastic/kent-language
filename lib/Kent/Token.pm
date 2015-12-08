@@ -10,35 +10,26 @@ my %keywords   = %Kent::Lexer::Keywords::keywords;
 sub new {
     my ( $class, %args ) = @_;
 
-    my $self = { 'name'   => $args{name},
-                 'raw'    => $args{raw},
-                 'line'   => $args{line},
-                 'column' => $args{column}, };
-
-    # select * from rules where 'name' = $name limit 1;
-    my $rule = ( grep { $_->{name} eq $self->{name} } @$rule_table )[0];
-
-    # Variable-width tokens use 'undef' in the token definition table.
-    $self->{width} = $rule->{width};
-    $self->{width} //= length( $self->{raw} );
+    my $self = { 'name'         => $args{name},
+                 'raw'          => $args{raw},
+                 'width'        => length( $args{raw} ), #XXX: This is currently wrong for opening and closing quotes.
+                 'line'         => $args{line},
+                 'column'       => $args{column},
+                 'next_context' => $args{next_context}};
 
     # Is this a keyword?
     if ( $self->{name} eq 'ID' && exists $keywords{ $self->{raw} } ) {
-        $self->{name} = "KW_$self->{raw}";
+        $self->{name} = "kw_$self->{raw}";
     }
 
     return bless $self, $class;
 }
 
-sub name {
-    my ( $self ) = @_;
-    return $self->{name};
-}
-
-sub width {
-    my ( $self ) = @_;
-    return $self->{width};
-}
+sub name   { $_[0]->{name}; }
+sub width  { $_[0]->{width}; }
+sub raw    { $_[0]->{raw}; }
+sub line   { $_[0]->{line}; }
+sub column { $_[0]->{line}; }
 
 sub TO_JSON {
     my ( $self ) = @_;

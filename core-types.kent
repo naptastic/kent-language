@@ -81,36 +81,20 @@
             Regex
         Does:
             str                 # display the regex in some meaningful way
+=======
+Core Classes:
 
-===== END CORE CLASSES =====
-===== BEGIN PROVIDED CLASSES =====
+    Simple Classes ("Atomic" meaning, in this case, indivisible.)
+        Object (from which all others derive)
+            Num
+            Str
+            Arr
+            Hash
+            IO
+            Fail
+            Regex
+            WHAT DID I FORGET - I KNOW I FORGOT SOMETHING
 
-    Table
-        Is:
-            Object
-            Array
-            Table
-        Does:
-            insert
-            delete
-            update
-            select
+    Composite Classes (which begin with a Simple class, and have more roles composed onto them)
+        Table (think SQL)
 
-===== END PROVIDED CLASSES =====
-===== BEGIN PROVIDED LIBRARIES =====
-    STDIO
-    Tables: Provides data structure like a database table (but is really an array of hashes) with select, insert, delete, update methods.
-===== BEGIN SERIALIZATION FORMATS =====
-    CSV
-    JSON
-    YAML
-    XML (lol)
-    INI (lol for totally different reasons)
-    MySQL dumps; perhaps dumps in other databases?
-===== END SERIALIZATION FORMATS =====
-===== BEGIN IMAGE FILE FORMATS =====
-===== END IMAGE FILE FORMATS =====
-===== BEGIN AUDIO FILE FORMATS =====
-===== END AUDIO FILE FORMATS =====
-===== BEGIN CONTAINER FORMATS =====
-===== END CONTAINER FORMATS =====

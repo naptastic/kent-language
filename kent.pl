@@ -2,7 +2,6 @@
 package Kent;
 use common::sense;
 
-use Kent::Lexer  ();
 use Kent::Parser ();
 use Kent::Util   ();
 
@@ -17,8 +16,9 @@ sub script {
     my (@args) = @_;
     my $sourcecode = Kent::Util::slurp(shift @args);
 
-    my $tokens = Kent::Lexer->new($sourcecode)->lex;
-    my $ast    = Kent::Parser->new($tokens)->parse;
+    my $parser = Kent::Parser->new( sourcecode => $sourcecode);
+    my $ast    = $parser->parse();
+
     return 1;
 }
 
