@@ -1,11 +1,19 @@
 Core Classes:
-    Object
-    Number
-    String
-    Array
-    Hash
-    Table
-    Handle
+
+    Simple Classes ("Atomic" meaning, in this case, indivisible.)
+        Object (from which all others derive)
+            Num
+            Str
+            Arr
+            Hash
+            IO
+            Fail
+            Regex
+            WHAT DID I FORGET - I KNOW I FORGOT SOMETHING
+
+    Composite Classes (which begin with a Simple class, and have more roles composed onto them)
+        Table (think SQL)
+
 
 Provided Libraries:
     STDIO

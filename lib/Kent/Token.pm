@@ -10,18 +10,17 @@ my %keywords   = %Kent::Lexer::Keywords::keywords;
 sub new {
     my ( $class, %args ) = @_;
 
-    my $self = {
-        'name'   => $args{name},
-        'raw'    => $args{raw},
-        'line'   => $args{line},
-        'column' => $args{column},
-    };
+    my $self = { 'name'   => $args{name},
+                 'raw'    => $args{raw},
+                 'width'  => $args{width},
+                 'line'   => $args{line},
+                 'column' => $args{column}, };
 
     # select * from rules where 'name' = $name limit 1;
     my $rule = ( grep { $_->{name} eq $self->{name} } @$rule_table )[0];
 
     # Variable-width tokens use 'undef' in the token definition table.
-    $self->{width} = $rule->{width};
+    $self->{width} //= $rule->{width} if ref $rule eq 'HASH';
     $self->{width} //= length( $self->{raw} );
 
     # Is this a keyword?
@@ -32,14 +31,10 @@ sub new {
     return bless $self, $class;
 }
 
-sub name {
-    my ($self) = @_;
-    return $self->{name};
-}
-
-sub width {
-    my ($self) = @_;
-    return $self->{width};
-}
+sub name   { $_[0]->{name}; }
+sub width  { $_[0]->{width}; }
+sub raw    { $_[0]->{raw}; }
+sub line   { $_[0]->{line}; }
+sub column { $_[0]->{line}; }
 
 1;
