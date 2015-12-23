@@ -100,8 +100,7 @@ sub _make_token {
                                      line   => $self->{line},
                                      column => $self->{column}, );
 
-    # Newline magic. Is there a better way than this?
-    if ( $newtoken->width == -1 ) {
+    if ( $newtoken->name eq 's_NEWLINE' ) {
         $self->{line}++;
         $self->{column} = 1;
     } else {

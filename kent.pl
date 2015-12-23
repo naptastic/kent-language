@@ -2,7 +2,6 @@
 package Kent;
 use common::sense;
 
-use Kent::Lexer  ();
 use Kent::Parser ();
 use Data::Dumper ();
 
@@ -29,8 +28,7 @@ sub script {
 
     say "loaded source code from $filename";
 
-    my $lexer  = Kent::Lexer->new($sourcecode);
-    my $parser = Kent::Parser->new();
+    my $parser = Kent::Parser->new($sourcecode);
     my $ast    = $parser->parse($lexer);
 
     return 1;

@@ -10,11 +10,14 @@ my %pairs = %Kent::Lexer::Rules::pairs;
 # tidyoff
 sub new {
     # $tokens is an arrayref full of Kent::Token objects.
-    my ( $class, $tokens ) = @_;
+    my ( $class, %args ) = @_;
 
-    return bless { 'stack'  => [],
-                   'tokens' => $tokens, }, $class;
-
+    return bless { 'stack'      => [],
+                   '_context'   => [],
+                   'tokens'     => $args{tokens},
+                   'end_with'   => $args{end_with},
+                   'sourcecode' => $args{sourcecode},
+                 }, $class;
 }
 # tidyon
 
@@ -44,17 +47,27 @@ sub apply_rule {
     my ($self, $rule) = @_;
 
     if ( defined $rule->[1] ) {
-        # Reduce.
+        # Reduce. Except this didn't actually reduce, whoops.
         my $method = $rule->[1];
         $self->push( $method->($self) );
     }
     elsif ( defined $rule->[2] ) {
-        # Change out the rules we're using.
-        # Needs so much work...
+        # Determine terminator for the scope into which we're pushing
+        $self->deepen( $rule->[2], $end_with );
     }
     else { die "This code should never be reached." }
 
     return 1;    
+}
+
+sub deepen {
+    my ($self, $context, $end_with) = @_;
+    unshift @{ $self->{_context} }, $context;
+}
+
+sub undeepen {
+    my ($self) = @_;
+    shift @{ $self->{_context} };
 }
 
 sub push {

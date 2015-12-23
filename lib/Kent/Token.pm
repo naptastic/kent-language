@@ -12,20 +12,13 @@ sub new {
 
     my $self = { 'name'   => $args{name},
                  'raw'    => $args{raw},
-                 'width'  => $args{width},
+                 'width'  => length( $args{raw} ),
                  'line'   => $args{line},
                  'column' => $args{column}, };
 
-    # select * from rules where 'name' = $name limit 1;
-    my $rule = ( grep { $_->{name} eq $self->{name} } @$rule_table )[0];
-
-    # Variable-width tokens use 'undef' in the token definition table.
-    $self->{width} //= $rule->{width} if ref $rule eq 'HASH';
-    $self->{width} //= length( $self->{raw} );
-
     # Is this a keyword?
     if ( $self->{name} eq 'ID' && exists $keywords{ $self->{raw} } ) {
-        $self->{name} = "KW_$self->{raw}";
+        $self->{name} = "kw_$self->{raw}";
     }
 
     return bless $self, $class;

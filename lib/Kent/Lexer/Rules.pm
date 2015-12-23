@@ -29,63 +29,64 @@ our %pairs = ( @qchars, reverse @qchars );
 # [2] Width: 0 for EOF, -1 for newline, undef for vaiable width, or literal width.
 #
 my @code_rules = (
-    [ qr/^$/,                       'EOF',           0     ],
+    [ qr/^$/,                       'EOF',           ],
 
     # Quoting and comments
-    [ qr/^[$qchars]\"/,             'QUOTE_BEGIN',   2     ],
-    [ '/*',                         'CMT_BEGIN',     2     ],
+    [ qr/^[$qchars]"/,              'QUOTE_BEGIN',   ],
+    [ '/*',                         'CMT_BEGIN',     ],
 
     # Basics
-    [ qr/^([\t\f\r ]+)/,            's_SPACE',       undef ],
-    [ qr/^(\n)/,                    's_NEWLINE',     -1    ],
-    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          undef ],
-    [ '.',                          's_DOT',         1     ],
-    [ ':',                          's_COLON',       1     ],
-    [ qr/^(\d+)/,                   's_DIGITS',      undef ],
-    [ '\\',                         's_ESC',         1     ],
+    [ qr/^([\t\f\r ]+)/,            's_SPACE',       ],
+    [ qr/^(\n)/,                    's_NEWLINE',     ],
+    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          ],
+    [ '.',                          's_DOT',         ],
+    [ ':',                          's_COLON',       ],
+    [ qr/^(\d+)/,                   's_DIGITS',      ],
+    [ '\\',                         's_ESC',         ],
 
     # Comparison
     # TODO: Heredocs; binary shifting.
-    [ '<=>',                        'o_NCMP',        3     ],
-    [ '==',                         'o_EQ',          2     ],
-    [ '=<',                         'o_LE',          2     ],
-    [ '>=',                         'o_GE',          2     ],
-    [ '<',                          'o_LT',          1     ],
-    [ '>',                          'o_GT',          1     ],
+    [ '<=>',                        'o_NCMP',        ],
+    [ '==',                         'o_EQ',          ],
+    [ '=<',                         'o_LE',          ],
+    [ '>=',                         'o_GE',          ],
+    [ '<',                          'o_LT',          ],
+    [ '>',                          'o_GT',          ],
 
     # Basic Syntax
-    [ '=',                          'o_SET',         1     ],
-    [ ';',                          'o_SEMI',        1     ],
-    [ '(',                          'o_EXPR_BEGIN',  1     ],
-    [ ')',                          'o_EXPR_END',    1     ],
-    [ ',',                          'o_NEXT',        1     ],
-    [ '{',                          'o_SCOPE_BEGIN', 1     ],
-    [ '}',                          'o_SCOPE_END',   1     ],
+    [ '=',                          'o_SET',         ],
+    [ ';',                          'o_SEMI',        ],
+    [ '(',                          'o_EXPR_BEGIN',  ],
+    [ ')',                          'o_EXPR_END',    ],
+    [ ',',                          'o_NEXT',        ],
+    [ '{',                          'o_SCOPE_BEGIN', ],
+    [ '}',                          'o_SCOPE_END',   ],
 
     # Arithmetic
-    [ '++',                         'o_INCR_1',      2     ],
-    [ '+=',                         'o_INCR',        2     ],
-    [ '+',                          'o_ADD',         1     ],
-    [ '**',                         'o_POW',         2     ],
-    [ '*',                          'o_MUL',         1     ],
-    [ '/',                          'o_DIV',         1     ],
-    [ '--',                         'o_DECR_1',      2     ],
-    [ '-=',                         'o_DECR',        2     ],
-    [ '-',                          's_MINUS',       1     ], );
+    [ '++',                         'o_INCR_1',      ],
+    [ '+=',                         'o_INCR',        ],
+    [ '+',                          'o_ADD',         ],
+    [ '**',                         'o_POW',         ],
+    [ '*',                          'o_MUL',         ],
+    [ '/',                          'o_DIV',         ],
+    [ '--',                         'o_DECR_1',      ],
+    [ '-=',                         'o_DECR',        ],
+    [ '-',                          's_MINUS',       ], );
 
 my @comment_rules = [
-    [ qr/^$/,                       'EOF',           0     ],
-    [ '*/',                         'CMT_END',       2     ],
-    [ qr/^\\(.)/,                   'CHAR',          1     ],
-    [ qr/./,                        'CHAR',          1     ], ];
+    [ qr/^$/,                       'EOF',           ],
+    [ qr/^\\(.)/,                   'CHAR',          ],
+    [ '*/',                         'CMT_END',       ],
+    [ qr/(.)/,                      'CHAR',          ], ];
 
 sub quote_rules {
-    my $quote_end = %pairs{shift};
+    my $quote_begin = shift;
+    my $quote_end = $pairs{$quote_begin};
     return (
-        [ qr/^$/,                   'EOF',           0     ],
-        [ qr/^"\Q$quote_end\E/,     'STR_END',       2     ],
-        [ qr/^\\(.)/,               'CHAR',          1     ],
-        [ qr/./,                    'CHAR',          1     ],
+        [ qr/^$/,                   'EOF',           ],
+        [ qr/^\\(.)/,               'CHAR',          ],
+        [ qr/^"\Q$quote_end\E/,     'STR_END',       ],
+        [ qr/(.)/,                  'CHAR',          ],
     );
 }
 
@@ -95,8 +96,7 @@ sub table {
 
     my $table = [];
     push @$table, { 'regex' => $_->[0],
-                    'name'  => $_->[1],
-                    'width' => $_->[2], } foreach @{code_rules};
+                    'name'  => $_->[1], } foreach @{code_rules};
     return $table;
 }
 
