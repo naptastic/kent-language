@@ -25,79 +25,91 @@ our %pairs = ( @qchars, reverse @qchars );
 #
 # [0] String or regex matching token.
 #     if regex, it MUST capture, to prevent stale data leaking into the token list.
-# [1] Token name - MUST be unique (right now).
-# [2] Width: 0 for EOF, -1 for newline, undef for vaiable width, or literal width.
+# [1] Token name - No longer required to be unique.
+# [2] Next Context - undef if the parser should remain in the same context, or the
+#     name of the next context. '_pop' is special; it means exit the current context
+#     and return to the previous one.
 #
 my @code_rules = (
-    [ qr/^$/,                       'EOF',           ],
+    [ qr/^$/,                       'EOF',           '_pop',   ],
 
     # Quoting and comments
-    [ qr/^[$qchars]"/,              'QUOTE_BEGIN',   ],
-    [ '/*',                         'CMT_BEGIN',     ],
+    [ qr/^[$qchars]"/,              'QUOTE_BEGIN',   'quote'   ],
+    [ '/*',                         'CMT_BEGIN',     'comment' ],
 
     # Basics
-    [ qr/^([\t\f\r ]+)/,            's_SPACE',       ],
-    [ qr/^(\n)/,                    's_NEWLINE',     ],
-    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          ],
-    [ '.',                          's_DOT',         ],
-    [ ':',                          's_COLON',       ],
-    [ qr/^(\d+)/,                   's_DIGITS',      ],
-    [ '\\',                         's_ESC',         ],
+    [ qr/^([\t\f\r ]+)/,            's_SPACE',       undef,    ],
+    [ qr/^(\n)/,                    's_NEWLINE',     undef,    ],
+    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          undef,    ],
+    [ '.',                          's_DOT',         undef,    ],
+    [ ':',                          's_COLON',       undef,    ],
+    [ qr/^(\d+)/,                   's_DIGITS',      undef,    ],
+    [ '\\',                         's_ESC',         undef,    ],
 
     # Comparison
     # TODO: Heredocs; binary shifting.
-    [ '<=>',                        'o_NCMP',        ],
-    [ '==',                         'o_EQ',          ],
-    [ '=<',                         'o_LE',          ],
-    [ '>=',                         'o_GE',          ],
-    [ '<',                          'o_LT',          ],
-    [ '>',                          'o_GT',          ],
+    [ '<=>',                        'o_NCMP',        undef,    ],
+    [ '==',                         'o_EQ',          undef,    ],
+    [ '=<',                         'o_LE',          undef,    ],
+    [ '>=',                         'o_GE',          undef,    ],
+    [ '<',                          'o_LT',          undef,    ],
+    [ '>',                          'o_GT',          undef,    ],
 
     # Basic Syntax
-    [ '=',                          'o_SET',         ],
-    [ ';',                          'o_SEMI',        ],
-    [ '(',                          'o_EXPR_BEGIN',  ],
-    [ ')',                          'o_EXPR_END',    ],
-    [ ',',                          'o_NEXT',        ],
-    [ '{',                          'o_SCOPE_BEGIN', ],
-    [ '}',                          'o_SCOPE_END',   ],
+    [ '=',                          'o_SET',         undef,    ],
+    [ ';',                          'o_SEMI',        undef,    ],
+    [ '(',                          'o_EXPR_BEGIN',  undef,    ],
+    [ ')',                          'o_EXPR_END',    undef,    ],
+    [ ',',                          'o_NEXT',        undef,    ],
+    [ '{',                          'o_SCOPE_BEGIN', 'code',   ],
+    [ '}',                          'o_SCOPE_END',   '_pop',   ],
 
     # Arithmetic
-    [ '++',                         'o_INCR_1',      ],
-    [ '+=',                         'o_INCR',        ],
-    [ '+',                          'o_ADD',         ],
-    [ '**',                         'o_POW',         ],
-    [ '*',                          'o_MUL',         ],
-    [ '/',                          'o_DIV',         ],
-    [ '--',                         'o_DECR_1',      ],
-    [ '-=',                         'o_DECR',        ],
-    [ '-',                          's_MINUS',       ], );
+    [ '++',                         'o_INCR_1',      undef,    ],
+    [ '+=',                         'o_INCR',        undef,    ],
+    [ '+',                          'o_ADD',         undef,    ],
+    [ '**',                         'o_POW',         undef,    ],
+    [ '*',                          'o_MUL',         undef,    ],
+    [ '/',                          'o_DIV',         undef,    ],
+    [ '--',                         'o_DECR_1',      undef,    ],
+    [ '-=',                         'o_DECR',        undef,    ],
+    [ '-',                          's_MINUS',       undef,    ], );
 
 my @comment_rules = [
-    [ qr/^$/,                       'EOF',           ],
-    [ qr/^\\(.)/,                   'CHAR',          ],
-    [ '*/',                         'CMT_END',       ],
-    [ qr/(.)/,                      'CHAR',          ], ];
+    [ qr/^$/,                       'EOF',           undef,    ],
+    [ qr/^\\(.)/,                   'CHAR',          undef,    ],
+    [ '*/',                         'CMT_END',       '_pop'    ],
+    [ qr/(.)/,                      'CHAR',          undef,    ], ];
 
 sub quote_rules {
     my $quote_begin = shift;
     my $quote_end = $pairs{$quote_begin};
     return (
-        [ qr/^$/,                   'EOF',           ],
-        [ qr/^\\(.)/,               'CHAR',          ],
-        [ qr/^"\Q$quote_end\E/,     'STR_END',       ],
-        [ qr/(.)/,                  'CHAR',          ],
+        [ qr/^$/,                   'EOF',           undef,    ],
+        [ qr/^\\(.)/,               'CHAR',          undef,    ],
+        [ qr/^"\Q$quote_end\E/,     'STR_END',       '_pop',   ],
+        [ qr/(.)/,                  'CHAR',          undef,    ],
     );
 }
 
-sub table {
-    my ( $context ) = @_;
-    $context //= 'code';
+{
+    # Table cache. Closed over so nobody can mess with it while using it.
+    my $rule_sets = {};
 
-    my $table = [];
-    push @$table, { 'regex' => $_->[0],
-                    'name'  => $_->[1], } foreach @{code_rules};
-    return $table;
+    sub table {
+        my ( $context ) = @_;
+
+        if (defined $rule_sets->{$context}) {
+            return $rule_sets->{$context};
+        }
+        else {
+            my $table = [];
+            push @$table, { 'regex'        => $_->[0],
+                            'name'         => $_->[1],
+                            'next_context' => $_->[2] } foreach @{code_rules};
+            return $rule_sets->{$context} = $table;
+        }
+    }
 }
 
 # tidyon

@@ -29,7 +29,7 @@ sub script {
     say "loaded source code from $filename";
 
     my $parser = Kent::Parser->new($sourcecode);
-    my $ast    = $parser->parse($lexer);
+    my $ast    = $parser->parse();
 
     return 1;
 }

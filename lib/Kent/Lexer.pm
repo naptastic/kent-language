@@ -5,18 +5,21 @@ use Kent::Lexer::Rules    ();
 use Kent::Token           ();
 use common::sense;
 
+# sourcecode:   a string to tokenize. You should probably load the whole file.
+# context:      the name of the set of rules for the lexer to use.
+# ending_token: When this token is found, ... aw, shit.
 sub new {
-    my ( $class, $sourcecode ) = @_;
+    my ( $class ) = @_;
 
-    my $self = { sourcecode => $sourcecode,
-                 tokens     => [],
-                 line       => 1,
-                 column     => 1,
-                 rule_table => Kent::Lexer::Rules::table };
+    # $self->{tokens} should go away once the old model of "lex the whole
+    # file at once" is gone.
+    my $self = { line       => 1,
+                 column     => 1, };
 
     return bless $self, $class;
 }
 
+# Don't use this anymore.
 sub lex {
     my ( $self ) = @_;
     my $rule_table = $self->{rule_table};
@@ -55,20 +58,17 @@ sub lex {
 }
 
 sub next {
-    my ( $self ) = @_;
-    my $rule_table = $self->{rule_table};
+    my ( $self, $context, $source_ref ) = @_;
+    my $rule_table = Kent::Lexer::Rules::table($context);
 
     foreach my $rule ( @{ $rule_table } ) {
 
-        if ( ref $rule->{regex} eq 'Regexp'
-             && $self->{sourcecode} =~ s/$rule->{regex}// )
-        { 
-            return $self->_make_token( $rule, $1 );
-        }
+        if ( ref $rule->{regex}     eq 'Regexp'
+            && ${ $self->{sourcecode} } =~ s/$rule->{regex}// )
+        { return $self->_make_token( $rule, $1 ) }
 
-        if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) {
-            return $self->_make_token( $rule, $1 );
-        }
+        if ( ${ $self->{sourcecode} } =~ s/^\Q$rule->{regex}\E// )
+        { return $self->_make_token( $rule, $1 ) }
     }
 
 }
