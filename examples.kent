@@ -1,0 +1,72 @@
+/* fizzbuzz */
+
+fn fizzbuzz [
+    arr -> words,
+    for (1..100) [
+        if (. % 15 == 0) [words.push "fizzbuzz", next],
+        if (. % 5 == 0)  [words.push "buzz",     next],
+        if (. % 3 == 0)  [words.push "fizz",     next],
+
+        /* this casts the default variable to a string before adding it to our
+           array, which isn't strictly part of the problem but *fneh* */
+
+        words.push .str
+    ],
+    return words
+]
+
+/* Accumulator Generator - See http://paulgraham.com/accgen.html */
+
+fn accgen (num n, num i) [
+    return fn (num i) [n.+ i],
+]
+
+/* reverse a string */
+
+string.reverse,
+
+/* reverse a string the hard way.
+   We're bringing in push, pop, shift, and unshift from Perl.
+   String equivalents will be cat, uncat, untac, and tac.     */
+
+reversed <- str;
+for (split('', string)) [ reversed.tac . ]
+
+/* reverse the sentence in str sentence */
+
+fn reverse_sentence (str sentence) [
+    arr -> words    = split('', sentence),
+    str -> reversed = join(' ', words)
+]
+
+/* find minimum value in arr list (list is not a keyword) */
+
+fn min (arr list) [
+    /* could be rendered simply thus */
+    reduce [.0 < .1 ? .0 : .1] list
+
+    /* or with more austerity */
+    reduce [ if (.0 < .1) [return .0]
+             else         [return .1] ]
+]
+
+/* calculate a remainder given nums a into b */
+
+fn remainder (num a, num b) [
+    while (a < b) [a.- b], b
+]
+
+/* return a list of unique values plus how many times they were seen */
+
+fn uniq (arr list) [
+    hash -> foo,
+    foreach (item) (list) [ foo.{item}.+ 1 ],
+    return foo
+]
+
+/* return true if two words are anagrams of each other */
+
+fn anagram (str a, str b) [
+    if (a.explode.sort.join = b.explode.sort.join) [return true ]
+    else                                           [return false]
+]
