@@ -10,12 +10,10 @@ my %keywords   = %Kent::Lexer::Keywords::keywords;
 sub new {
     my ( $class, %args ) = @_;
 
-    my $self = {
-        'name'   => $args{name},
-        'raw'    => $args{raw},
-        'line'   => $args{line},
-        'column' => $args{column},
-    };
+    my $self = { 'name'   => $args{name},
+                 'raw'    => $args{raw},
+                 'line'   => $args{line},
+                 'column' => $args{column}, };
 
     # select * from rules where 'name' = $name limit 1;
     my $rule = ( grep { $_->{name} eq $self->{name} } @$rule_table )[0];
@@ -33,13 +31,21 @@ sub new {
 }
 
 sub name {
-    my ($self) = @_;
+    my ( $self ) = @_;
     return $self->{name};
 }
 
 sub width {
-    my ($self) = @_;
+    my ( $self ) = @_;
     return $self->{width};
+}
+
+sub TO_JSON {
+    my ( $self ) = @_;
+    return { 'name'   => $self->{name},
+             'width'  => $self->{width},
+             'line'   => $self->{line},
+             'column' => $self->{column}, };
 }
 
 1;

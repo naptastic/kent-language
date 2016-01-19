@@ -22,7 +22,6 @@ our %keywords = (
     'for'   => 1,
     'while' => 1,
     'until' => 1,
-    'do'    => 1,
-);
+    'do'    => 1, );
 
 1;

@@ -9,10 +9,10 @@ sub new {
     # $tokens is an arrayref full of Kent::Token objects.
     my ( $class, $tokens ) = @_;
 
-    return bless {
-        'stack'  => [],
-        'tokens' => $tokens,
-    }, $class;
+    return
+        bless { 'stack'  => [],
+                'tokens' => $tokens,
+        }, $class;
 
 }
 
@@ -24,10 +24,10 @@ sub parse {
 
         $self->push( shift @{ $self->{tokens} } );
         my $phrase = $self->join();    # don't wanna do this a hundred times
-        say $self->join(q{ });
+        say $self->join( q{ } );
 
-      APPLYRULES:
-        foreach my $rule (@Kent::Parser::Rules::rules) {
+    APPLYRULES:
+        foreach my $rule ( @Kent::Parser::Rules::rules ) {
 
             if ( $phrase =~ $rule ) {
 
@@ -47,7 +47,7 @@ sub push {
 }
 
 sub pop {
-    my ($self) = @_;
+    my ( $self ) = @_;
     return pop @{ $self->{stack} };
 }
 

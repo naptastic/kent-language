@@ -55,6 +55,7 @@ my @code_rules = (
 
     # Comments
     [ qr/^(#[^\n]*)/, 'COMMENT', undef ],
+    [ qr{^(/\* .*? \*/)}, 'COMMENT', undef ],
 
     # Arithmetic
     [ '++', 'o_INCR_1', 2 ],
@@ -98,7 +99,7 @@ my %pairs = ( qw| ' ' " " < > ( ) [ ]
 # tidyon
 
 # Make all pairs symmetric; IOW, they can be used in either direction.
-foreach ( sort keys %pairs ) { $pairs{ $pairs{ $_ } } = $_; }
+foreach ( sort keys %pairs ) { $pairs{ $pairs{$_} } = $_; }
 
 sub table {
     my ( $context ) = @_;
