@@ -44,7 +44,7 @@ sub lex {
 
         # When the lexer can handle everything, this will go away.
         if ( !$matchfound ) {
-            say Dumper( $self->{tokens} );
+            say Kent::Util::dump( $self->{tokens} );
             die "Source code contained something I couldn't understand.";
         }
     }
