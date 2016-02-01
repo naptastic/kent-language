@@ -28,7 +28,7 @@ sub script {
 
     say "loaded source code from $filename";
 
-    my $parser = Kent::Parser->new($sourcecode);
+    my $parser = Kent::Parser->new( sourcecode => $sourcecode);
     my $ast    = $parser->parse();
 
     return 1;

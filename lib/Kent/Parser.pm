@@ -1,43 +1,68 @@
 package Kent::Parser;
 
 use common::sense;
+use Kent::Lexer;
 use Kent::Lexer::Rules;
 use Kent::Parser::Rules;
 use Data::Dumper;
 
-my %pairs = %Kent::Lexer::Rules::pairs;
-
 # tidyoff
 sub new {
-    # $tokens is an arrayref full of Kent::Token objects.
     my ( $class, %args ) = @_;
 
-    $args{context} //= 'code';
-
     return bless { 'stack'      => [],
-                   '_contexts'  => [],
-                   'lexer'      => Kent::Lexer::new();
+                   'lexer'      => Kent::Lexer->new(),
                    'tokens'     => $args{tokens},
                    'end_with'   => $args{end_with},
-                   'sourcecode' => $args{sourcecode},
-                 }, $class;
+                   'sourcecode' => $args{sourcecode}, }, $class;
 }
 # tidyon
 
 sub parse {
-    my ( $self, $lexer ) = @_;
-    my $contexts   = $self->{_contexts};
+    my ( $self )   = @_;
     my $sourcecode = $self->{sourcecode};
+    my $lexer      = $self->{lexer};
+    my $lexrules   = $self->{lexrules};
 
-    my $matched = 0;
+    # my $matched = 0;
 
+    my $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
+
+#    foreach (1..10) {
     while ( 1 ) {
-        unless ($matched) {
-          $self->push(
-            $lexer->next( $contexts->[0], \$sourcecode )
-          ); }
+#    while (length $sourcecode) {
 
-        $matched = 0;
+        # unless ($matched) { $lexer->next( $lexrules, \$sourcecode ) }
+        my $next_token = $lexer->next( $lexrules, \$sourcecode )
+            or die '$lexer->next returned false. Something is wrong.';
+        $self->push( $next_token );
+
+        say "[$next_token->{line}, $next_token->{column}] $next_token->{name} ($next_token->{next_context})";
+
+        # This is disgusting and wasteful.
+        if ( $next_token->{next_context} eq 'code' ) {
+            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
+        }
+        elsif ( $next_token->{next_context} eq 'comment' ) {
+            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::comment_rules );
+        }
+        elsif ( $next_token->{next_context} eq 'nquote' ) {
+            my $quote_begin = $next_token->{raw};
+            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::nquote_rules( $quote_begin ) );
+        }
+        elsif ( $next_token->{next_context} eq 'iquote' ) {
+            my $quote_begin = $next_token->{raw};
+            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::iquote_rules( $quote_begin ) );
+        }
+        elsif ( $next_token->{next_context} eq 'eof' ) { return 1; }
+        elsif ( $next_token->{next_context} eq 'die' ) {
+            die "I don't know why I'm supposed to die";
+        }
+        else {
+            die 'a token defined a next_context I don\'t understand.';
+        }
+
+        # $matched = 0;
 
         my $phrase = $self->join();    # don't wanna do this a hundred times
         say $self->join( q{ } );       # Debugging info
@@ -51,29 +76,10 @@ sub apply_rule {
     return 1;    
 }
 
-sub deepen {
-    my ($self, $context, $end_with) = @_;
-    unshift @{ $self->{_contexts} }, $context;
-}
-
-sub undeepen {
-    my ($self) = @_;
-    shift @{ $self->{_contexts} };
-}
-
 sub push {
     my ( $self, $thingy ) = @_;
     unshift @{ $self->{stack} }, $thingy;
 
-    if (defined $thingy->{next_context}) {
-        if ($thingy->{next_context} eq 'quote' {
-            # TODO idk what to do here.   
-        }
-        elsif ($thingy->{next_context} eq '_pop') { $self->undeepen;                       }
-        else                                      { $self->deepen($thingy->{next_context}) };
-    }
-
-    #    print Data::Dumper::Dumper($thingy);
     return 1;
 }
 

@@ -31,12 +31,16 @@ our %pairs = ( @qchars, reverse @qchars );
 #     the parser. Is this a good idea? IDK, but it makes some of my questions go
 #     away, so *fneh*
 #
-my @code_rules = (
-    [ qr/^$/,                       'EOF',           'code',    ],
+sub code_rules {
+    return [
+    [ qr/^$/,                       'EOF',           'eof',     ],
 
     # Tokens that cause us to move to a different context
+    # The quoting stuff returns the wrong number of characters.
+    # I don't care right now, since I'm going to replace all that syntax soon
+    # anyway. Allowing ["literal [interpolated] literal "] is a mistake.
     [ qr/^([$qchars])"/,            'IQUOTE_BEGIN',  'iquote',  ],
-    [ qr/^([$qchars])'/,            'NQUOTE_BEGIN',  'nquote',  ]
+    [ qr/^([$qchars])'/,            'NQUOTE_BEGIN',  'nquote',  ],
     [ '/*',                         'CMT_BEGIN',     'comment', ],
 
     # Basics
@@ -75,12 +79,15 @@ my @code_rules = (
     [ '/',                          'o_DIV',         'code',    ],
     [ '--',                         'o_DECR_1',      'code',    ],
     [ '-=',                         'o_DECR',        'code',    ],
-    [ '-',                          's_MINUS',       'code',    ], );
+    [ '-',                          's_MINUS',       'code',    ], ];
+}
 
-my @comment_rules = [
+sub comment_rules {
+    return [
     [ qr/^$/,                       'EOF',           'die',     ],
     [ '*/',                         'CMT_END',       'code',    ],
     [ qr/(.)/,                      'CHAR',          'comment', ], ];
+}
 
 sub nquote_rules {
     # $quote_begin does not include the single-quote.
@@ -106,24 +113,15 @@ sub iquote_rules {
     ];
 }
 
-{
-    # Table cache. Closed over so nobody can mess with it while using it.
-    my $rule_sets = {};
+# I wonder how expensive this is. I wonder if I should cache it
+sub table {
+    my ( $rule_table_ar ) = @_;
 
-    sub table {
-        my ( $context ) = @_;
-
-        if (defined $rule_sets->{$context}) {
-            return $rule_sets->{$context};
-        }
-        else {
-            my $table = [];
-            push @$table, { 'regex'        => $_->[0],
+        my $table = [];
+        push @{ $table }, { 'regex'        => $_->[0],
                             'name'         => $_->[1],
-                            'next_context' => $_->[2] } foreach @{code_rules};
-            return $rule_sets->{$context} = $table;
-        }
-    }
+                            'next_context' => $_->[2] } foreach @{ $rule_table_ar };
+        return $table;
 }
 
 # tidyon

@@ -11,12 +11,8 @@ use common::sense;
 sub new {
     my ( $class ) = @_;
 
-    # $self->{tokens} should go away once the old model of "lex the whole
-    # file at once" is gone.
-    my $self = { line       => 1,
-                 column     => 1, };
-
-    return bless $self, $class;
+    return  bless { line       => 1,
+                    column     => 1, }, $class;
 }
 
 # Don't use this anymore.
@@ -58,16 +54,16 @@ sub lex {
 }
 
 sub next {
-    my ( $self, $context, $source_ref ) = @_;
-    my $rule_table = Kent::Lexer::Rules::table($context);
+    my ( $self, $rules, $source_ref ) = @_;
+#    my $rule_table = Kent::Lexer::Rules::table($context);
 
-    foreach my $rule ( @{ $rule_table } ) {
+    foreach my $rule ( @{ $rules } ) {
 
         if ( ref $rule->{regex}     eq 'Regexp'
-            && ${ $self->{sourcecode} } =~ s/$rule->{regex}// )
+            && ${ $source_ref } =~ s/$rule->{regex}// )
         { return $self->_make_token( $rule, $1 ) }
 
-        if ( ${ $self->{sourcecode} } =~ s/^\Q$rule->{regex}\E// )
+        if ( ${ $source_ref } =~ s/^\Q$rule->{regex}\E// )
         { return $self->_make_token( $rule, $1 ) }
     }
 
@@ -95,10 +91,11 @@ sub barf {
 sub _make_token {
     my ( $self, $rule, $raw ) = @_;
 
-    my $newtoken = Kent::Token->new( name   => $rule->{name},
-                                     raw    => $1,
-                                     line   => $self->{line},
-                                     column => $self->{column}, );
+    my $newtoken = Kent::Token->new( name         => $rule->{name},
+                                     raw          => $raw,
+                                     line         => $self->{line},
+                                     column       => $self->{column},
+                                     next_context => $rule->{next_context}, );
 
     if ( $newtoken->name eq 's_NEWLINE' ) {
         $self->{line}++;
