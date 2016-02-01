@@ -26,70 +26,84 @@ our %pairs = ( @qchars, reverse @qchars );
 # [0] String or regex matching token.
 #     if regex, it MUST capture, to prevent stale data leaking into the token list.
 # [1] Token name - No longer required to be unique.
-# [2] Next Context - undef if the parser should remain in the same context, or the
-#     name of the next context. '_pop' is special; it means exit the current context
-#     and return to the previous one.
+# [2] Next Context - the set of rules that should be used for lexing after this
+#     token. This context effectively creates another level of state machine in
+#     the parser. Is this a good idea? IDK, but it makes some of my questions go
+#     away, so *fneh*
 #
 my @code_rules = (
-    [ qr/^$/,                       'EOF',           '_pop',   ],
+    [ qr/^$/,                       'EOF',           'code',    ],
 
-    # Quoting and comments
-    [ qr/^[$qchars]"/,              'QUOTE_BEGIN',   'quote'   ],
-    [ '/*',                         'CMT_BEGIN',     'comment' ],
+    # Tokens that cause us to move to a different context
+    [ qr/^([$qchars])"/,            'IQUOTE_BEGIN',  'iquote',  ],
+    [ qr/^([$qchars])'/,            'NQUOTE_BEGIN',  'nquote',  ]
+    [ '/*',                         'CMT_BEGIN',     'comment', ],
 
     # Basics
-    [ qr/^([\t\f\r ]+)/,            's_SPACE',       undef,    ],
-    [ qr/^(\n)/,                    's_NEWLINE',     undef,    ],
-    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          undef,    ],
-    [ '.',                          's_DOT',         undef,    ],
-    [ ':',                          's_COLON',       undef,    ],
-    [ qr/^(\d+)/,                   's_DIGITS',      undef,    ],
-    [ '\\',                         's_ESC',         undef,    ],
+    [ qr/^([\t\f\r ]+)/,            's_SPACE',       'code',    ],
+    [ qr/^(\n)/,                    's_NEWLINE',     'code',    ],
+    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          'code',    ],
+    [ '.',                          's_DOT',         'code',    ],
+    [ ':',                          's_COLON',       'code',    ],
+    [ qr/^(\d+)/,                   's_DIGITS',      'code',    ],
+    [ '\\',                         's_ESC',         'code',    ],
 
     # Comparison
     # TODO: Heredocs; binary shifting.
-    [ '<=>',                        'o_NCMP',        undef,    ],
-    [ '==',                         'o_EQ',          undef,    ],
-    [ '=<',                         'o_LE',          undef,    ],
-    [ '>=',                         'o_GE',          undef,    ],
-    [ '<',                          'o_LT',          undef,    ],
-    [ '>',                          'o_GT',          undef,    ],
+    [ '<=>',                        'o_NCMP',        'code',    ],
+    [ '==',                         'o_EQ',          'code',    ],
+    [ '=<',                         'o_LE',          'code',    ],
+    [ '>=',                         'o_GE',          'code',    ],
+    [ '<',                          'o_LT',          'code',    ],
+    [ '>',                          'o_GT',          'code',    ],
 
     # Basic Syntax
-    [ '=',                          'o_SET',         undef,    ],
-    [ ';',                          'o_SEMI',        undef,    ],
-    [ '(',                          'o_EXPR_BEGIN',  undef,    ],
-    [ ')',                          'o_EXPR_END',    undef,    ],
-    [ ',',                          'o_NEXT',        undef,    ],
-    [ '{',                          'o_SCOPE_BEGIN', 'code',   ],
-    [ '}',                          'o_SCOPE_END',   '_pop',   ],
+    [ '=',                          'o_SET',         'code',    ],
+    [ ';',                          'o_SEMI',        'code',    ],
+    [ '(',                          'o_EXPR_BEGIN',  'code',    ],
+    [ ')',                          'o_EXPR_END',    'code',    ],
+    [ ',',                          'o_NEXT',        'code',    ],
+    [ '{',                          'o_SCOPE_BEGIN', 'code',    ],
+    [ '}',                          'o_SCOPE_END',   'code',    ],
 
     # Arithmetic
-    [ '++',                         'o_INCR_1',      undef,    ],
-    [ '+=',                         'o_INCR',        undef,    ],
-    [ '+',                          'o_ADD',         undef,    ],
-    [ '**',                         'o_POW',         undef,    ],
-    [ '*',                          'o_MUL',         undef,    ],
-    [ '/',                          'o_DIV',         undef,    ],
-    [ '--',                         'o_DECR_1',      undef,    ],
-    [ '-=',                         'o_DECR',        undef,    ],
-    [ '-',                          's_MINUS',       undef,    ], );
+    [ '++',                         'o_INCR_1',      'code',    ],
+    [ '+=',                         'o_INCR',        'code',    ],
+    [ '+',                          'o_ADD',         'code',    ],
+    [ '**',                         'o_POW',         'code',    ],
+    [ '*',                          'o_MUL',         'code',    ],
+    [ '/',                          'o_DIV',         'code',    ],
+    [ '--',                         'o_DECR_1',      'code',    ],
+    [ '-=',                         'o_DECR',        'code',    ],
+    [ '-',                          's_MINUS',       'code',    ], );
 
 my @comment_rules = [
-    [ qr/^$/,                       'EOF',           undef,    ],
-    [ qr/^\\(.)/,                   'CHAR',          undef,    ],
-    [ '*/',                         'CMT_END',       '_pop'    ],
-    [ qr/(.)/,                      'CHAR',          undef,    ], ];
+    [ qr/^$/,                       'EOF',           'die',     ],
+    [ '*/',                         'CMT_END',       'code',    ],
+    [ qr/(.)/,                      'CHAR',          'comment', ], ];
 
-sub quote_rules {
+sub nquote_rules {
+    # $quote_begin does not include the single-quote.
     my $quote_begin = shift;
     my $quote_end = $pairs{$quote_begin};
-    return (
-        [ qr/^$/,                   'EOF',           undef,    ],
-        [ qr/^\\(.)/,               'CHAR',          undef,    ],
-        [ qr/^"\Q$quote_end\E/,     'STR_END',       '_pop',   ],
-        [ qr/(.)/,                  'CHAR',          undef,    ],
-    );
+    return [
+        [ qr/^$/,                   'EOF',           'die',     ],
+        [ qr/^\\(.)/,               'CHAR',          'nquote',  ],
+        [ qr/^'\Q$quote_end\E/,     'STR_END',       'code',    ],
+        [ qr/(.)/,                  'CHAR',          'nquote',  ],
+    ];
+}
+
+sub iquote_rules {
+    # $quote_begin does not include the double-quote.
+    my $quote_begin = shift;
+    my $quote_end   = $pairs{$quote_begin};
+    return [
+        [ qr/^$/,                   'EOF',           'die',    ],
+        [ qr/^\\(.)/,               'CHAR',          'iquote', ],
+        [ qr/^'\Q$quote_end\E/,     'STR_END',       'code',   ],
+        [ qr/(.)/,                  'CHAR',          'iquote', ],
+    ];
 }
 
 {
