@@ -31,7 +31,9 @@
             str
             num                 # may throw a fit if numeric conversion isn't possible... maybe, I think?
             m                   # string.m(regex) returns a Match object
-            s                   # string.s(regex) ummm I don't know how I want this to behave.
+            s                   # string.s(regex,string) ummm I don't know how I want this to behave.
+            literal             # bool - is this a literal string or not?
+            interpolate         # gods I don't know how this will work
     Array
         Is:
             Object
