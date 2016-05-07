@@ -12,9 +12,23 @@ sub new {
     my $self = { sourcecode => $sourcecode,
                  tokens     => [],
                  line       => 1,
-                 column     => 1, };
+                 column     => 1,
+                 position   => 0 };
 
     return bless $self, $class;
+}
+
+# $rules is a Kent::Lexer::State::Table object.
+sub get_next_token {
+    my (@self, $rules) = @_;
+
+    while (1) {
+        my $next_char = substr( ${$self->{sourcecode}}, $self->{position}, 1 );
+
+        my $next_state = $rules
+
+        $self->{position}++;
+    }
 }
 
 sub lex {
