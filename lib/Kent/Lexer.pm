@@ -13,7 +13,8 @@ sub new {
                  tokens     => [],
                  line       => 1,
                  column     => 1,
-                 position   => 0 };
+                 position   => 0,
+                 bookmark   => 0, };
 
     return bless $self, $class;
 }
@@ -22,12 +23,16 @@ sub new {
 sub get_next_token {
     my (@self, $rules) = @_;
 
+    my $current_state = 0;
+    # substr bookmark..position is the token once we finish yoinking characters from it.
+    $self->{bookmark} = $self->{position};
+
     while (1) {
-        my $next_char = substr( ${$self->{sourcecode}}, $self->{position}, 1 );
-
-        my $next_state = $rules
-
-        $self->{position}++;
+        my $ret = $state_table->[$current_state]->do($next_char);
+        # if $ret is a Kent::Token, just return it
+        # $current_state = $ret
+        # $self->{position}++;
+        # exceptions propagate
     }
 }
 

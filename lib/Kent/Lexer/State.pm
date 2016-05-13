@@ -26,4 +26,21 @@ sub new {
     my ($class) = @_;
 }
 
+# takes a character, returns either a complete token, or the index of the next state.
+# If no next state is defined, raise an exception.
+sub do {
+    # if self yoinks... shit, how do I advance the position from here?
+
+    foreach ( @{ $self->{rules} } ) {
+        # if the rule matches
+        #    maybe we go to another state
+        #    maybe we return a fully-formed token
+        #    except how do we get the information from the lexer to make the token? Does the lexer
+        #    pass itself in here? That seems gross...
+    }
+
+    if ( defined $self->{default_next_state} ) { return $self->{default_next_state} }
+    else { die "bug or incompletion in the lexer"; }
+}
+
 1;
