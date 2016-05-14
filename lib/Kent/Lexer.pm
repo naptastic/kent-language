@@ -21,21 +21,33 @@ sub new {
 
 # $rules is a Kent::Lexer::State::Table object.
 sub get_next_token {
-    my (@self, $rules) = @_;
+    my ( @self, $state_table ) = @_;
 
     my $current_state = 0;
+
     # substr bookmark..position is the token once we finish yoinking characters from it.
     $self->{bookmark} = $self->{position};
 
-    while (1) {
-        my $ret = $state_table->[$current_state]->do($next_char);
-        # if $ret is a Kent::Token, just return it
-        # $current_state = $ret
-        # $self->{position}++;
-        # exceptions propagate
+    while ( 1 ) {
+        my $next_char = substr( $self->{sourcecode}, $self->{position}, 1 );
+        my $ret = $state_table->[$current_state]->do( $next_char );
+
+        # this is probably wrong
+        if ( ref $ret eq 'Kent::Token' ) {
+            # TODO: Special case newlines
+            # srsly tho, idk how the interface between this and the state should look.
+            #
+            return $ret;
+        }
+        else {
+            $current_state = $ret;
+            $self->{position}++;
+        }
     }
 }
 
+
+# XXX: Deprecated! Logic is being moved out to where it belongs.
 sub lex {
     my ( $self ) = @_;
     my $rule_table = Kent::Lexer::Rules::table;

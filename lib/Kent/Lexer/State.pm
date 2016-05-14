@@ -23,24 +23,32 @@ use common::sense;
 # please, somebody make me stop
 
 sub new {
-    my ($class) = @_;
+    my ( $class ) = @_;
+
+    # Every rule needs to be either a single-character string literal,
+    # or a regex that's just a character class of some kind.
+
+    my $self = { rules   => [],
+                 default => undef, };
+
+    return bless $self, $class;
 }
 
 # takes a character, returns either a complete token, or the index of the next state.
 # If no next state is defined, raise an exception.
 sub do {
-    # if self yoinks... shit, how do I advance the position from here?
+    my ( $self, $char ) = @_;
 
-    foreach ( @{ $self->{rules} } ) {
-        # if the rule matches
-        #    maybe we go to another state
-        #    maybe we return a fully-formed token
-        #    except how do we get the information from the lexer to make the token? Does the lexer
-        #    pass itself in here? That seems gross...
+    # TODO: needs validation
+
+    foreach my $rule ( @{ $self->{rules} } ) {
+
+        # no, wrong, needs conditionals but idk what they are
+        if ( $rule->matches( $char ) ) { return $rule->{action}; }
     }
 
-    if ( defined $self->{default_next_state} ) { return $self->{default_next_state} }
-    else { die "bug or incompletion in the lexer"; }
+    if   ( defined $self->{default} ) { return $self->{default} }
+    else                              { die "bug or incompletion in the lexer"; }
 }
 
 1;
