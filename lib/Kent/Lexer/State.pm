@@ -23,13 +23,15 @@ use common::sense;
 # please, somebody make me stop
 
 sub new {
-    my ( $class ) = @_;
+    my ($class) = @_;
 
     # Every rule needs to be either a single-character string literal,
     # or a regex that's just a character class of some kind.
 
-    my $self = { rules   => [],
-                 default => undef, };
+    my $self = {
+        rules   => [],
+        default => undef,
+    };
 
     return bless $self, $class;
 }
@@ -39,16 +41,52 @@ sub new {
 sub do {
     my ( $self, $char ) = @_;
 
-    # TODO: needs validation
+    length($char) == 1 || die "Got a character more than one character long.";
 
     foreach my $rule ( @{ $self->{rules} } ) {
 
-        # no, wrong, needs conditionals but idk what they are
-        if ( $rule->matches( $char ) ) { return $rule->{action}; }
+        if ( ref $rule->{condition} eq 'Regexp' && $char =~ $self->{condition} )
+        {
+
+            # Match
+        }
+        elsif ( $char eq $rule->{condition} ) {
+
+            # Match
+        }
+        else {
+            # No match
+        }
     }
 
-    if   ( defined $self->{default} ) { return $self->{default} }
-    else                              { die "bug or incompletion in the lexer"; }
+    if ( defined $self->{default} ) { return $self->{default} }
+    else                            { die "bug or incompletion in the lexer"; }
+}
+
+# Eventually this needs to get smart enough to split a condition, like, if the
+# caller adds a rule that overlaps an already-existing rule, that needs to get
+# handled. TODO
+sub add_rule {
+
+   # XXX: Probably would be better as named rather than positional parameters...
+    my ( $self, $condition, $action ) = @_;
+    push @{ $self->{rules} },
+      {
+        condition => $condition,
+        action    => $action,
+      };
+    return 1;
+}
+
+sub set_default_action {
+    my ($self) = @_;
+
+    # idk if this is the right thing to do
+    die "default action for this state is already defined"
+      if defined $self->{default};
+
+    $self->{default} = shift;
+    return 1;
 }
 
 1;

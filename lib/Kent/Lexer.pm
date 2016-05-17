@@ -32,11 +32,14 @@ sub get_next_token {
         my $next_char = substr( $self->{sourcecode}, $self->{position}, 1 );
         my $ret = $state_table->[$current_state]->do( $next_char );
 
-        # this is probably wrong
         if ( ref $ret eq 'Kent::Token' ) {
-            # TODO: Special case newlines
-            # srsly tho, idk how the interface between this and the state should look.
-            #
+
+            # Newlines are special.
+            if ( $ret->name() eq 's_NEWLINE' ) {
+                $self->{line}++;
+                $self->{column} = 1;
+            }
+
             return $ret;
         }
         else {
