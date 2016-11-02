@@ -1,0 +1,18 @@
+/* The most important of the Types are arrays, because all arrays are
+   executable ("doable"). All arrays have a .do method, which iterates over
+   the array, executing any statements, and returning whatever was explicitly
+   returned. If there are no statements, doing the array returns true. Note
+   the important distinction: */
+
+[ return 4 ]        /* not True or False */
+[ return 4 ].do     /* not True or False */
+[ 1, 2 ]            /* not True or False */
+[ 1, 2 ].do         /* not True or False */
+[ return ].do       /* True */
+[ return True ].do  /* True */
+[ return False ].do /* False */
+
+/* For this to work, one of Kent's Types is a statement. An array meant to be
+   used as a block of code probably only contains statements. (Doing an array
+   that contains both statements and non-statements renders the non-statements
+   meaningless; they'll just get skipped over. */

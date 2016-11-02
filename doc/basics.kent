@@ -1,0 +1,72 @@
+say "Hello, world!";
+
+/* gets you exactly what you'd expect on STDOUT, plus a newline. If you add
+   a newline to the end of the string, you'll get a total of two newlines.
+   If you use print instead of say, you get zero newlines.
+   
+   STDIN, STDOUT, and STDERR are filehandles, so if you wrote the previous
+   statement out longhand, it would look like this: */
+
+STDOUT.print "Hello, world!\n";
+
+/* All filehandles also have a 'say' method. Choose wisely. Some filehandles
+   might default to appending "\r\n" because that's the most appropriate thing
+   for them to do. using print with "\n" on those filehandles would be
+   defeating their purpose.
+
+/* You can print or say the result of a statement: */
+
+say 2 + 2;
+
+/* This would print "4" and a newline to STDOUT. */
+
+2 + 2;
+
+/* This would do nothing. There's only one time a statement or literal value
+   in void context does anything, and that's in a conditional block. More on
+   that later.
+
+   You cannot declare an object or variable. You can only construct an object
+   by composing a role onto something that doesn't exist yet. "Types" are the
+   core, built-in roles that are mostly incompatible with each other.
+
+   What "mostly" means will be covered later. It's complex, but logical. */
+
+three <- Number (3);
+drops <- String ("Drops");
+
+/* What's going on here is that we're creating two new objects and passing
+   them into constructor for the Types "Number" and "String", respectively,
+   with the arguments 3 and "Drops", and composing whatever comes from that
+   role onto the respective object.
+
+   this is awkward, so there's literal syntax support for some core types.
+   Here are boolean, number, string, hash, and array: */
+
+yes_it_is    <- True;
+no_it_is_not <- False;
+three        <- 3;
+drops        <- "Drops";
+stuff        <- { color => 'red',
+                  part  => 'nose', };
+list         <- [ 1, 2, 3, 4 ];
+
+/* Access object members with a dot. Access array members with square
+   braces. */
+
+say stuff.color;   /* says red */
+say list[2];       /* says 3, because arrays are zero-indexed */
+
+/* Members and methods are interchangeable. These two are functionally the
+   same: */
+
+foo.a <- 4;
+foo.a <- () [ return 4 ];
+
+/* Right now, hash keys are strings. If a key would be a valid object
+   identifier, it doesn't need to be quoted.
+   
+   Some other languages allow keying on any object. I can't wrap my head
+   around that so I'm not making it so, at least not now. */
+
+stuff.'unit size' <- "8x10";
