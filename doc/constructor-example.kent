@@ -51,208 +51,25 @@ stuff <- { color => 'red',
            part  => 'nose', };
 list  <- [ 1, 2, 3, 4 ];
 
-/* Hash members can be accessed with the dot operator. Array members can be
-   accessed with indices in parenthesis. */
+/* Access object members with a dot. Access array members with square
+   braces. */
 
 say stuff.color;   /* says red */
 say list[2];       /* says 3, because arrays are zero-indexed */
 
+/* Members and methods are interchangeable. These two are functionally the
+   same: */
+
+foo.a <- 4;
+foo.a <- () [ return 4 ];
+
 /* Right now, hash keys are strings. If a key would be a valid object
-   identifier, it doesn't need to be quoted. */
+   identifier, it doesn't need to be quoted.
+   
+   Some other languages allow keying on any object. I can't wrap my head
+   around that so I'm not making it so, at least not now. */
 
 stuff.'unit size' <- "8x10";
-
-==============================================================================
-
-/* Objects. */
-
-/* You construct an object by composing some role onto it. That role is another
-   object. Objects have members and methods, which are interchangeable. A
-   "constructor" then is just a special kind of array with an argument list
-   (which could be empty) which returns your constructed object. */
-
-role Some::Class ( arguments ) [ constructor ]
-
-/* Note that there's a distinction between creation and construction.
-
-   The only thing special about roles is the namespacing operator, and the
-   only thing it does is provide an enforcement mechanism for a stricture
-   which is that a namespace can't reside in a file of the wrong name. This
-   example role would have to be named /Some/Role.kent relative to one of
-   Kent's library paths, and Kent would throw an exception if you tried to
-   create Some::Other::Role.
-
-   Whatever gets returned by the constructor must be composable onto an object
-   of a compatible Type. */
-
-role Some::Role ( Number x, Number y, Number z ) [ return .; ];
-
-/* The dot represents the object that Kent created and passed into the
-   constructor. This is the "default object", and there is almost always a
-   default object in-scope.
-   
-   This constructor ignores what was passed in, does no kind of
-   initialization, and just returns the object it was given. For this
-   situation, where you just need the role, this is sufficient: */
-
-role Some::Class;
-
-/* This probably shouldn't be very common, since Kent wants to use "Value
-   Object" pattern ubiquitously. [link needed.]
-
-   Here's a very simple example of a value object: Some::Class is just a
-   string that can't contain any null characters: */
-
-role Some::Class (String value) [
-    if (. =~ m{\0}) [ throw "Null characters are not allowed."; ]
-    else            [ return .; ]
-]
-
-/* You can also make your class object into some kind of literal, since object
-   literals can be composed onto compatible objects. This also means that
-   composition can be used for merging hashes, arrays, tables, maybe some
-   other things, with clobbering. This probably isn't very useful, but who
-   knows, and I don't see a reason to forbid it. Maybe config files? */
-
-/* in lib/Foo.kent */
-
-Foo <- { 'a' => 12,
-         'b' => 24, };
-
-/* in lib/Bar.kent */
-
-Bar <- { 'b' => 36,
-         'c' => 24, };
-
-/* in my script */
-
-load Foo;
-load Bar;
-
-my_object <- Foo;
-my_object <- Bar;
-
-/* However you would print the keys and values of this hash, you'd see:
-
-   a => 12
-   b => 36
-   c => 24
-
-   Syntax for iterating over hashes is something I haven't figured out yet. */
-
-==============================================================================
-
-/* So what if you want to have different kinds of constructors for the same
-   class? You can't. You have to subclass.
-
-   The one exception is if you have multiple constructors with the same name,
-   but different argument lists. You could have one constructor that takes
-   a string and another that takes a number. This is probably a bad idea, so
-   for now it will emit a warning. */
-
-role Some::Role ()               [ return "default string"; ];
-role Some::Role ( Number value ) [ return value.str; ];
-role Some::Role ( String value ) [ return value; ];
-
-   /* You can do this with other methods as well. */
-
-   To prevent monkeypatching, objects created in one file are never visible
-   outside that file, except for the class object matching the filename.
-   
-   This does mean that all subroutines defined in your file can be used as
-   constructors as long as their names don't contain the namespacing
-   operator.
-
-   This object isn't very useful. Here's a better example, which represents a
-   point in Euclidian 2-space and has a method to find that point's distance
-   from the origin: */
-
-role Point (Number x, Number y) [
-    .distance <- ( x ** 2 + y ** 2 ) ** .5;
-]
-
-/* The class would be more useful if you could also get the coordinates back
-   out. */
-
-role Point (Number x, Number y) [
-    .x <- x;
-    .y <- y;
-    .distance <- ( x ** 2 + y ** 2 ) ** .5;
-]
-
-/* This has a problem, though. Consider this: */
-
-load Point;
-home <- Point (4, 3);
-
-/* says 5 */
-say home.disance;
-
-home.x = 6;
-
-/* still says 5, which is no longer correct */
-say home.distance;
-
-/* Object members and methods (code versus values) are interchangeable. We
-   just need to make .distance do the calculation every time it's accessed,
-   in case the correct value has changed.
-
-   Note that arrays are literal, and code blocks are just arrays that
-   take zero or more arguments, so we can do this: */
-
-    .distance <- () [ return ( x ** 2 + y ** 2 ) ** .5 ]
-
-/* But don't do this: */
-
-    .distance = [ return ( x ** 2 + y ** 2 ) ** .5 ].do;
-
-/* That's just a longer way of saying the same wrong thing.
-
-   Another way to enforce correctness (albeit rude) would be to make x and y
-   either immutable (ro for read-only) or private: */
-
-    ro .x <- x;
-    ro .y <- y;
-
-    private .x <- x;
-    private .y <- y;
-
-/* You can do both read-only and private, though I'm not sure what good that
-   would do you. We actually won't do either of these things, because being
-   able to read and write .x and .y are important parts of the interface to
-   Points.
-
-   Earlier we defined .distance by composing an array onto it. That array
-   takes arguments (zero of them) which is how Kent knows it should be run
-   instead of returned as an array. In order to separate concerns better, and
-   make better use of precious screen real-estate, methods like this can be
-   defined outside the constructor. While we're at it, we can define some
-   other potentially useful methods. */
-
-role Point (Number x, Number y) [
-    .x <- x;
-    .y <- y;
-
-    /* I wonder if I should make this statement optional. */
-    return .;
-]
-
-distance () [ return ( x ** 2 + y ** 2 ) ** .5 ]
-
-move_to (Number x, Number y) [
-    .x = x;
-    .y = y;
-]
-
-distance_from (Point other_place) [
-    dx <- .x - other_places.x;
-    dy <- .y - other_places.y;
-    return ( dx ** 2 + dy ** 2 ) ** .5;
-]
-
-/* Because type safety is handled at runtime, you don't have to say ahead of
-   time what kind of object your method will return. I'm not sure if that's
-   the right approach, but I guess we'll find out. Sorry about the cancer. */
 
 ==============================================================================
 
