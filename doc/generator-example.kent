@@ -1,31 +1,28 @@
-/* Generator example
+/* Accumulator Generator example
    See http://www.paulgraham.com/accgen.html for details of the challenge.
-   By only one measure is it the "best" generator:
-   It is the most Kent-like. */
+   By only one measure is it the "best" generator: It is the most Kent-like.
+   
+   I've gone one step beyond the challenge by adding a default method so that
+   when the accumulator is accessed with no arguments, it returns its current
+   value. */
 
-acc <- Object;
-acc.generate = {
-    x = args[0];
-    return { return x += args[0] } }
+/* begin Accumulator.kent */
 
-foo <- Object;
+role Accumulator (Number x) [
+    return (Number y) [ return x += y; ];
+]
 
-/* make foo.adder return 5 + whatever gets passed in */
-foo.adder = adder.generate(5);
+() [ return .x ]
+
+/* end Accumulator.kent */
+
+load Accumulator;
+foo <- Accumulator(5);
+
+/* says "5" */
+
+say foo;
 
 /* says "9" */
-say foo.adder(4);
 
-/* nothing stopping you from using a string either... */
-foo.catter = adder.generate("5");
-
-/* says "54" even though we're passing in a number. */
-foo.catter(4);
-
-/* Because the x object inside the function is a string,
-   it will stringify the number 4. If generating a string
-   concatenator is undesirable, then a simple
-
-   x must be String;
-
-   inside the generator would prevent these shenanigans. */
+say foo(4);
