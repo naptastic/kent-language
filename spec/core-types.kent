@@ -1,21 +1,243 @@
+Types (which are a strict subset of, and a special kind of role).
+        Boolean
+            (Compatible with almost everything.)
+
+        String
+            (Incompatible with anything else except Booleans, and Number
+            Types if a specific stricture is disabled.)
+
+            (Represented internally, they could be simple and small enough to
+            fit inside the object structure, simple and pointed to... there
+            were more possibilities but I can't remember them.)
+
+        Number
+            (A new Number will be created with the most efficient sub-role
+            possible. If some operation would exceed the bounds of that sub-
+            role, the Number will be promoted to some other kind of Number
+            that can handle it.)
+        Number::Int
+        Number::Float
+        Number::Rational
+        Number::BigInt
+        Number::BigNum
+        Number::Vector
+            (Incompatible with anything else except Booleans, and Strings if
+            a specific stricture is disabled.)
+
+            (These singular objects will still have array methods that behave
+            as if the object were an array with itself as the sole element.)
+
+        Array
+            (Incompatible with any of the singular Types)
+        Hash
+        Collection
+            (This is what you actually get if you compose an Array onto a Hash
+            or vice-versa.)
+
+        Handle
+            (Incompatible with any other Type.)
+        Exception
+            (Incompatible with any other Type.)
+        Regex
+            (Incompatible with any other Type.)
+        Role
+            (uhhhhh)
+
+"Special" Types. (You'll probably never use them directly.)
+    Object (from which all others derive. You'll usually only encounter one
+        as the default object passed into a constructor when a new object is
+        being created and composed.)
+    KeyValue (hashes are made of these, and you'll probably only make them
+        using the literal syntax, key => value, as part of declaring a hash).
+    CodePoint (Characters consist of one or more CodePoints.)
+    Character (Strings consist of zero or more Characters.)
+        XXX Actually if I take the Perl 6 approach, these two could probably
+        be the same thing...
+    Deleted (meaning that this object is copied from another object, but this
+        object should not be inherited.)
+    Reference (only used by the internal API as part of object descriptions.
+        This might be the only one of Kent's "guts" that I don't expose in the
+        language. They are not themselves objects; they're just an id used
+        internally. They're 32-bit unsigned ints, meaning there's a hard cap
+        of 2^32 total objects in a Kent program. Hope that's enough.)
+
+        WHAT HAVE I OVERLOOKED?
+
+Composite Classes (which begin with a Simple class, and have more roles composed onto them)
+    Table (think SQL... actually, maybe this should be a Type.)
+    Collection (Hash + Array)
+    String roles stored such that interpolation can be mucked with
+    Complex numbers (which consist of two Numbers. Since the real and
+        imaginary parts could be different subtypes of Number, Complex
+        Numbers themselves can't be a Type.
+    RegexResult (a Collection returned by a Regex)
+
+Descriptions of Objects. (Internal implementation details.)
+    I'm hoping that the description of an object can always be 32 bytes, since
+    that's the cache line length on current ARM processors, half the cache
+    line length on x86_64, and aligns very nicely for architectures like
+    SPARC.
+
+    The most important field will say what type an object is, and thus dictate
+    the structure of the rest of the description. I can fit this in 4 bytes
+    quite easily, so the type can fit in a register of any 32-bit processor,
+    so checks against them can be done with very simple logic.
+
+    Possible Types, fully enumerated, number a few dozen:
+		Undef (which is how an Object starts; not to be confused with Object, below.)
+		Deleted
+		String
+		String::Small
+		Number::Integer
+		Number::Rational
+		Number::Float
+		Number::BigInt
+		Number::BigNum
+		Array
+		Array::Small
+        ArgumentList
+		Hash
+		Collection
+		True
+		False
+		Handle
+		Exception
+        Backtrace
+        Backtrace::Event
+		Regex
+		Role
+		Object (meaning more than one role is composed onto it)
+		Object::Small (the complete list of roles fits in the description)
+        ...and probably a whole bunch of Vector types.
+
+        ("Small" means that the entire object can fit inside its own
+        description, like an inode for a very small file that just inlines
+        the contents of the file.)
+
+    8 bits to enumerate the type.
+    
+    8 bits for flags, of which I think we'll just need 'immutable' and
+    'private'. If it gets crazy, maybe I can steal a bit or two from the
+    type enumeration.
+
+    16 bits for reference counting. 
+
+    That leaves 28 bytes for each type to work with.
+
+Representation of Types once they've been described
+    Every Type and every Role has a 32-bit unsigned integer identifier. These
+    identifiers are distinct from references to objects. Built-in types will,
+    of course, have very low, fixed numbers.
+
+String
+    32-bit unsigned integer for where the string starts
+    32-bit unsigned integer for how many graphemes it has
+    pointer to graphemes array
+    pad with zeros.
+
+String::Small
+    "Small" means 7 or fewer characters; it's just 7 32-bit Graphemes. If
+    any Grapheme is 0x00000000, the string has terminated.
+
+Number::Integer, Number::Float
+    12 null bytes, followed by an integer or float, followed by null padding.
+    Use the largest signed integer or float available on this platform.
+    Alignment, yay!
+
+Number::Rational
+    12 null bytes, followed by two integers. The first represents the
+    numerator and is unsigned. The second represents the denominator and is
+    signed.
+
+Number:: Vector???, BigInt, BigNum
+    I don't know how to define these without lots more research.
+
+Array
+    Reference to an ArgumentList
+    32-bit integer for how many elements there are in the array.
+    32-bit integer for where the array starts.
+    32-bit integer for where number of elements.
+    pointer to an array of References, which are all 32 bits.
+    Pad with zeros.
+
+Array::Small
+    "Small" means 7 or fewer elements; it's just 7 32-bit References. If any
+    ID is 0x00000000, the end of the array has been reached.
+
+    If an Array has an ArgumentList, it cannot be an Array::Small.
+
+ArgumentList
+    I'm out of steam and will define this later.
+
+Hashes
+    I'll crib something from somebody else. lol. I just want the description
+    to be fewer than 28 bytes.
+
+Collections
+    Two References to a Hash and an Array, aligned and padded sensibly.
+
+Handles
+    A handle can probably just store fileno. Maybe a String Reference for the
+    file name?
+
+Exceptions
+    Hash reference whose keys represent different ways you might want to find
+    out what kind of Exception you've trapped, such as HTTP status code, SQL
+    error code, or ERRNO.
+    String Reference for error message.
+    Backtrace reference.
+    Boolean for whether this exception can be trapped.
+
+Backtrace
+    Array reference whose elements are parts of the call stack as it is torn
+    away from the execution state of the running program. These elements
+    deserve their own Type.
+
+Backtrace::Event
+    idk yet
+
+Regex
+    Reference to a String containing what the regex looks like if printed.
+    Reference to an Array with an empty ArgumentList
+    Reference to an Array that takes one argument (for matching)
+    Reference to an Array that takes two arguments (for substitution)
+
+    This probably needs to be two separate things, like Match and Change or
+    something.
+
+Role
+    String reference containing the Role name
+    Array reference for the constructor argument list
+    Hash reference for 
+    A Role needs to contain an integer identifier so that roles can be tracked
+    internally by number, a String reference containing its name, an Array
+    reference that includes an argument list (even for Roles defined without
+    an argument list), and a Hash reference representing the members and
+    methods that a Role provides.
+
+Statements
+    Ah, Statements. How the fuck are these going to work...?
+
+    well, how many kinds of Statements are there?
+
 ===== BEGIN CORE CLASSES =====
     Object
         Is:
             Object
         Does:
-            new                 # does what it says on the box
-            destroy             # does what it says on the box
-            classify            # returns an array representing this object's method search order
+            undef               # does what it says on the box
+            roles               # returns an array representing this object's method search order
             default             # abstract method; what to do if attribute doesn't exist.
-            do                  # abstract method; what to do in void context with no requested attribute.
-            is                  # returns or reassigns... I'm not sure how this should work.
+                                # Probably a bad idea to actually use.
             has                 # true if an attribute by given name is available.
-    Bool
+    True
         Is:
             Object
-            Bool
-        Does:
-            bool
+            True
+    False
+        Is:
+            Object
+            False
     Number
         Is:
             Object
@@ -30,8 +252,6 @@
         Does:
             str
             num                 # may throw a fit if numeric conversion isn't possible... maybe, I think?
-            m                   # string.m(regex) returns a Match object
-            s                   # string.s(regex) ummm I don't know how I want this to behave.
     Array
         Is:
             Object
@@ -49,9 +269,19 @@
             unshift
             push
             pop
-            insert( position, object )
-            delete( position )
-            each [ code ]       # default becomes the array element being yeah'd.
+            insert ( position,
+                     object )
+                                # This is not great form... I'd rather have
+                                    array[4].insert("actually four");
+
+                                # which would shift everything from array[4..]
+                                # to the right by one, and then
+                                    array[4] <- 4;
+
+                                # but I don't know how I would implement that.
+
+            delete ( position ) # similarly, I'd rather have array[4].delete;
+            each () [ code ]    # default becomes the array element being yeah'd.
     Hash
         Is:
             Object
@@ -78,23 +308,10 @@
     Regex
         Is:
             Object
+            Array (with argument list)
             Regex
         Does:
             str                 # display the regex in some meaningful way
-=======
-Core Classes:
-
-    Simple Classes ("Atomic" meaning, in this case, indivisible.)
-        Object (from which all others derive)
-            Num
-            Str
-            Arr
-            Hash
-            IO
-            Fail
-            Regex
-            WHAT DID I FORGET - I KNOW I FORGOT SOMETHING
-
-    Composite Classes (which begin with a Simple class, and have more roles composed onto them)
-        Table (think SQL)
-
+            (no method)         # return an object representing the result of running the regex on args passed in
+            
+======
