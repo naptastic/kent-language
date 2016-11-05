@@ -1,0 +1,50 @@
+/* Strings come in two varieties: Interpolating and non-interpolating. The
+   simplest ways to create them should be pretty familiar. A non-interpolating
+   string can be made with two single quotes and the string in between. If you
+   need to express a single quote inside, escape it with a backslash. */
+
+ni_string <- 'don\'t walk on the grass',
+
+/* The backslash breaks up the string though, making it less readable. Also
+   available is Q syntax, which looks like this: */
+
+ni_string = q{don't walk on the grass},
+
+/* The { and } could be a wide variety of paired characters, so as to provide
+   maximum flexibility and make escaping characters as unnecessary as we can.
+   Square brackets, parenthesis, angle brackets, smart quotes, pipes,
+   guillemets, and a variety of Unicode math symbols will work. */
+
+ni_string = q«don't walk on the grass»,
+ni_string = q⋐don't walk on the grass⋑,
+
+/* Interpolating strings allow objects and their attributes to be added to the
+   string without a concatenation operator. The simple form uses double quotes
+   to enclose the string and curly braces to denote interpolation. */
+
+i_string = "don't {verb} on the {noun}.",
+
+/* If you need to use curly braces, you can escape them with backslashes, or
+   use double-Q syntax, which changes the set of characters that Kent will
+   interpret as "time to interpolate". */
+
+i_string = qq<don't <verb> on the <noun>.>,
+
+/* Interpolated strings also support the character escapes you're used to from
+   other languages, like \n for newlines, \t for tabs, etc. */
+
+i_string = qq<line one\nline two\nline three\n>,
+
+/* Lastly there are "theredocs", which allow blocks of text inside your code
+   to look sensible. Using Q or double-Q syntax, if the very next character is
+   a newline, then the string begins on the next line, indented by the same
+   amount as the character that closes the quote. Leading and trailing newline
+   characters are discarded.
+
+there_string = q<
+    Four score and seven years ago,
+    our forefathers (etc.)
+    >,
+
+/* The four spaces on the left will not be included on any line of the string.
+   It will contain exactly one newline. */
