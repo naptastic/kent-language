@@ -1,0 +1,28 @@
+/* Accumulator Generator example
+   See http://www.paulgraham.com/accgen.html for details of the challenge.
+   By only one measure is it the "best" generator: It is the most Kent-like.
+   
+   I've gone one step beyond the challenge by adding a default method so that
+   when the accumulator is accessed with no arguments, it returns its current
+   value. */
+
+/* begin Accumulator.kent */
+
+role Accumulator (Number x) [
+    return (Number y) [ return x += y; ];
+]
+
+() [ return .x ]
+
+/* end Accumulator.kent */
+
+load Accumulator;
+foo <- Accumulator(5);
+
+/* says "5" */
+
+say foo;
+
+/* says "9" */
+
+say foo(4);

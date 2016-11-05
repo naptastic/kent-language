@@ -1,0 +1,28 @@
+/* Nothing in Kent is True or False except for True, False, and objects that
+   have explicitly had True or False composed onto them. Checking the truth
+   of anything else will throw an exception. */
+
+some_condition <- True;
+
+if (some_condition) [
+    string <- "String";
+    if (string) [
+        /* Kent has just raised an exception, because strings are neither
+        True nor False. */
+    ]
+]
+
+/* "if" is a statement, and the result it yields is returned and can be stored
+   directly. */
+
+headgear <- if     (skiing) [ "knit cap" ]
+            elseif (rugby)  [ "leather helmet" ]
+            else            [ "parasol" ];
+
+/* This is the only time that a statement result or a literal in void context
+   goes anywhere.
+
+   Kent also has 'unless', and postfix support for both 'if' and 'unless'.
+   Unless cannot be used with else or elseif. */
+
+throw "You didn't say 'Simon Says'!" unless simon_said;

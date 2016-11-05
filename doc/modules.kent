@@ -1,0 +1,25 @@
+load Some::Class;
+
+/* This tells Kent to go through its list of include paths and load only the
+   first file /Some/Class.kent it finds, relative to that include path. The
+   include paths are stored in an array LIB. I keep my Kent development files
+   in my home directory under code/kent/lib, so if I were not thoughtful
+   enough, I could add this to the top of all my programs. Note the lack of a
+   trailing slash: */
+
+LIB.unshift "~/code/kent/lib";
+load Some::Class;
+
+/* But there is a stricture to prevent modifying LIB. I could do this... */
+
+allow modify_LIB;
+LIB.unshift "~/code/kent/lib";
+load Some::Class;
+
+/* But there's a better way. What you usually want is to add the lib/
+   directory that exists in the same directory as the currently running file.
+   Kent provides the Pwdlib pseudo-class that just expands to the Present
+   Working Directory / lib. This one line loads the file Class.kent from
+   lib/Some/ under the directory of the currently-running file. */
+
+load PWD::Some::Class;
