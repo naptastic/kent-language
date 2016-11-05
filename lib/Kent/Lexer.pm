@@ -12,11 +12,48 @@ use common::sense;
 sub new {
     my ( $class ) = @_;
 
-    return  bless { line       => 1,
-                    column     => 1, }, $class;
+    my $self = { sourcecode => $sourcecode,
+                 tokens     => [],
+                 line       => 1,
+                 column     => 1,
+                 position   => 0,
+                 bookmark   => 0, };
+
+    return bless $self, $class;
 }
 
-# Don't use this anymore.
+# $rules is a Kent::Lexer::State::Table object.
+sub get_next_token {
+    my ( @self, $state_table ) = @_;
+
+    my $current_state = 0;
+
+    # substr bookmark..position is the token once we finish yoinking characters from it.
+    $self->{bookmark} = $self->{position};
+
+    while ( 1 ) {
+        my $next_char = substr( $self->{sourcecode}, $self->{position}, 1 );
+        my $ret = $state_table->[$current_state]->do( $next_char );
+
+        if ( ref $ret eq 'Kent::Token' ) {
+
+            # Newlines are special.
+            if ( $ret->name() eq 's_NEWLINE' ) {
+                $self->{line}++;
+                $self->{column} = 1;
+            }
+
+            return $ret;
+        }
+        else {
+            $current_state = $ret;
+            $self->{position}++;
+        }
+    }
+}
+
+
+# XXX: Deprecated! Logic is being moved out to where it belongs.
 sub lex {
     my ( $self ) = @_;
     my $rule_table = $self->{rule_table};

@@ -7,6 +7,12 @@ use Kent::Lexer::Keywords ();
 my $rule_table = Kent::Lexer::Rules::table;
 my @keywords   = @Kent::Lexer::Keywords::keywords;
 
+#
+# XXX: Don't make subclasses of this. It would break the lexer, or require
+# the creation of logic that would grow organically into an incomprehensible
+# mess.
+#
+
 sub new {
     my ( $class, %args ) = @_;
 
