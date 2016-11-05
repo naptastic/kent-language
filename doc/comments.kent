@@ -1,5 +1,10 @@
 /* Comments begin with a forward slash, an asterisk, and a space. They end
    with a space, an asterisk, and a forward slash. The spaces are important.
    They make parsing infinitely easier.
+ 
+   A comment should not be on the same line as anything else.
    
-   A comment should not be on the same line as anything else. */
+   Comments in Kent have a special property, which is that they are part of
+   the statement they're inside of. That is, the statement object has a
+   .comment member, containing the contents of the comment (with the opening
+   and closing comment tokens stripped away.) */
