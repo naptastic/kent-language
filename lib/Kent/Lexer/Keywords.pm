@@ -49,7 +49,7 @@ our @keywords = (
     qw/ if then else elseif unless given when final /,
 
     # Exceptions
-    qw/ must throw trap /,
+    qw/ must throw trap except /,
 
     # Variables inside special code blocks
     qw/ key value args a b i /, );

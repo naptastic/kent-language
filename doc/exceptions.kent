@@ -1,0 +1,40 @@
+/* An exception is an object representing the current death throes of the
+   running script. You can only create them by causing an exception to be
+   thrown, or throwing one yourself.
+
+   This throws a divide-by-zero exception. */
+
+a <- 1 / 0,
+
+/* This throws a different kind of exception. */
+
+throw ( http => 404 );
+
+/* Throwing an exception is like returning from the current code block, except
+   that Kent will continue returning from wherever it is until the exception
+   is trapped by something, or the program exits.
+
+number <- 0,
+a      <- trap [ 1 / number ],
+
+/* The only argument to trap is a code block (not a method--it doesn't take an
+   argument list, and expressions (not statements)  act like local returns).
+   If, at any point during the execution of that code block, an exception is
+   thrown, it will accumulate an error message, a backtrace, and be composed
+   onto a. Otherwise, the result of the local return will be composed onto a.
+
+   So to protect against divide-by-zero in a funny but wrong way: */
+
+divide ( Number numerator, Number denominator ) [
+    result <- trap [ numerator / denominator ],
+
+    if result.except.divzero [
+        say 'Tried to divide by zero. Returning Avogadro's Constant.',
+        return 6.022e23,
+    ] else [
+        return result,
+    ]
+]
+
+/* 'except' is a keyword. No objects can have an 'except' attribute other than
+   exceptions. */
