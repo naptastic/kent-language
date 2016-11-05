@@ -41,7 +41,7 @@ sub code_rules {
     # anyway. Allowing ["literal [interpolated] literal "] is a mistake.
     [ qr/^([$qchars])"/,            'IQUOTE_BEGIN',  'iquote',  ],
     [ qr/^([$qchars])'/,            'NQUOTE_BEGIN',  'nquote',  ],
-    [ '/*',                         'CMT_BEGIN',     'comment', ],
+    [ '/* ',                        'CMT_BEGIN',     'comment', ],
 
     # Basics
     [ qr/^([\t\f\r ]+)/,            's_SPACE',       'code',    ],
@@ -85,7 +85,7 @@ sub code_rules {
 sub comment_rules {
     return [
     [ qr/^$/,                       'EOF',           'die',     ],
-    [ '*/',                         'CMT_END',       'code',    ],
+    [ ' */',                        'CMT_END',       'code',    ],
     [ qr/(.)/,                      'CHAR',          'comment', ], ];
 }
 
