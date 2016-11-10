@@ -1,0 +1,51 @@
+Objects each have an id, though they don't store or know their own id. The id
+is a 32-bit number. Kent will maintain a set of arrays of 2^16 object
+descriptions. Each object description is 4 bytes, so that's 256 KiB. These
+arrays are called Subpiles.
+
+Kent will also maintain an array of subpile pointers, with 2^16 entries, all
+initialized to NULL. It will therefore vary in size by architecture.  This
+is called o_pile. "The Pile" refers to o_pile and all the subpiles that might
+exist.
+
+On a 64-bit system, creating 2^32 objects simple enough to fit in their
+descriptions (not most objects) you would consume 32 GiB of RAM. So don't
+splurge.
+
+Everything here is written in Kent, but think of it as pseudocode that will
+get turned into C eventually.
+
+Creating the object pile looks like this:
+
+o_pile_maxindex         <- 0     /* highest object number */,
+o_pile_maxarr           <- 0     /* highest subpile */,
+o_pile                  <- []    /* array of array pointers */,
+o_pile[obj_pile_maxarr] <- []    /* array of object descriptions */,
+
+(Kent doesn't (yet?) have syntax for creating an array of fixed size.)
+
+(Notice that the comma, which ends a statement, is after the comment, so that
+the correct comment is part of the correct statement object.)
+
+If an object's id is known, its description can be found thus:
+
+my_o_arr  <- id &  0x0000FFFF,
+my_o_idx  <- id >> 16,
+my_o_desc <- o_pile[o_arr][o_arr_idx],
+
+The pile *could* be exposed inside Kent as a special object of its own Type
+but its use would be severely limited and mostly read-only.
+
+A new subpile will be created when the top subpile is more than 75% full;
+where o_pile_maxindex & 0x0000F000 is non-zero. If a subpile becomes empty,
+it won't be reaped until the subpile below it is more than 75% empty. I'm
+having a brain fart on that math.
+
+There also needs to be some kind of data structure (probably a stack?) with a
+list of object positions in the pile that have been vacated, so we re-use as
+much as possible and keep the number of allocated subpiles as small as
+possible. 256 KiB per subpile will add up pretty fast.
+
+At some point threading needs to be considered so that allocation of object
+position within the pile doesn't risk becoming a bottleneck. Needing to create
+an object shouldn't require obtaining a global lock.

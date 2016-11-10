@@ -1,0 +1,139 @@
+(already exists)
+Kent::Token
+
+(none of these exist yet)
+(Do I need to have a class for every Compound?)
+Kent::Token::Number::Hex
+Kent::Token::Number::Oct
+Kent::Token::Number::Int
+Kent::Token::Number::Rat
+Kent::Token::Number::Float
+Kent::Token::String
+
+Kent::Token::Expr::Access
+Kent::Token::Expr::SymUnOp
+Kent::Token::Expr::Literal
+Kent::Token::Expr::InParens
+Kent::Token::Expr::Math
+Kent::Token::Expr::Binary
+Kent::Token::Expr::Logic
+
+Kent::Token::Element
+Kent::Token::Array
+Kent::Token::HashKey
+Kent::Token::Hash
+
+Kent::Token::Cond
+Kent::Token::Cond::Tern
+Kent::Token::IfBlk
+
+Kent::Token::Fn
+Kent::Token::Fn::Sig
+
+Kent::Token::Stmt
+Kent::Token::CodeBlk
+
+==== dot is special ====
+
+Dot is special.
+
+dot id -> return access
+dot lcurly -> keep going
+dot lbrace -> keep going
+dot string -> return access
+dot coloncolon -> return access
+
+dot ANYTHING ELSE -> discard whitespace; return default object
+
+==== all states except for dot, and assembly states. ====
+
+sub lparen {
+my ($self) = @_;
+my $lexer = $self->{lexer};
+
+my $skipped_ws = $self->skip_ws;
+
+# Every state has zero or more possible atoms (not compounds) that would
+# complete it. A case from inside sub lparen:
+if ($next->name eq 'rparen') { return $self->lparen_rparen; }
+
+# lparen_rparen is an assembly state, not a transition state, so it doesn't
+# follow this pattern: instead, it returns an emparen (empty parens) object.
+
+# Every state has zero or more possible atoms (not compounds) that, if
+# followed by the right other tokens, could complete a recipe and return a
+# compound token.
+#
+# For demo purposes, we're pretending that (_) would be some kind of valid
+# expression. It's not.
+if ($next->name eq 'under') { return $self->lparen_under'; }
+
+# Every check if $next is a compound has to be re-checked after 
+# match, because the subsequent
+# could return a compound for which we've already looked.
+RECHECK:
+
+# Every state has zero or more compounds that would complete it.
+from 'expr_star', if $next->name eq 'expr', { return expr_star_expr; }
+
+# expr_star_expr is an assembly state and returns an expression.
+
+# Every state has zero or more compounds that would lead to its completion.
+from 'lparen', if $next->name eq 'expr'   { return $self->lparen_expr; }
+
+Each of those compounds has one or more starting tokens or compounds.
+Probably quite a few.
+in 'lparen', 'int' hasn't appeared, but 'int' could turn into 'expr', so
+{ $next = $self->int;
+  $stack->push($next);
+  goto RECHECK }
+
+Any other $next leads to an exception.
+
+==== Assembly States ====
+
+==== Skipping Whitespace ====
+
+sub skip_whitespace {
+    my ($self) = @_;
+
+    # Track whether we skipped over a whitespace token
+    my $skipped_ws;
+
+    # Get next token, skipping whitespace, and noting if we skipped any
+    # whitespace.
+    my $next = $self->lexer->next;
+    if ($next->name eq 'ws') { # ws is short for whitespace }
+        $skipped_ws = 1;
+        $next       = $self->lexer->next;
+    else {
+        $skipped_ws = 0;
+        $self->push($next);
+    }
+    return $skipped_ws;
+}
+
+==== FORGET EVERYTHING BELOW HERE ====
+
+$grammar->{compounds}[recipes][items]
+$grammar->{parenxpr}[0] = [ lparen expr rparen ]; # for example
+
+=============================================================================
+
+dot (which is special)
+
+id -> dot_id (which returns access)
+lcurly -> dot_lcurly
+lbrace -> dot_lbrace
+string -> dot_string (which returns access)
+coloncolon -> dot_coloncolon (wait, what?)
+
+Anything else that starts a recipe -> discard whitespace; return default object
+
+Anything else -> Exception
+
+=============================================================================
+
+=============================================================================
+
+=============================================================================

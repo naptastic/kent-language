@@ -60,6 +60,9 @@ Types (which are a strict subset of, and a special kind of role).
         language. They are not themselves objects; they're just an id used
         internally. They're 32-bit unsigned ints, meaning there's a hard cap
         of 2^32 total objects in a Kent program. Hope that's enough.)
+    Pile        (virtual object for looking at The Pile)
+    Subpile     (virtual object only used by The Pile)
+    Description (virtual; access to object metadata)
 
         WHAT HAVE I OVERLOOKED?
 
