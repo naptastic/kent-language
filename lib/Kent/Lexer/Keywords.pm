@@ -10,6 +10,9 @@ our @keywords = (
     qw/ Number Object String Boolean True False Array Hash Collection Regex
         Handle Exception Role /,
 
+    # scoping and encapsulation
+    qw/ secret private protected public export ro /,
+
     # Methods for all objects
     qw/ roles has with refcount reference undef default /,
 
