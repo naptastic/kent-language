@@ -4,6 +4,7 @@ use common::sense;
 
 use Kent::Parser ();
 use Kent::Util   ();
+use Data::Dumper ();
 
 script( @ARGV ) unless caller;
 
@@ -13,13 +14,15 @@ sub new {
 }
 
 sub script {
-    my ( @args ) = @_;
-    my $sourcecode = Kent::Util::slurp( shift @args );
+    my ( $filename ) = @_;
+    my $sourcecode = Kent::Util::slurp( $filename );
 
     say "loaded source code from $filename";
 
-    my $parser = Kent::Parser->new( sourcecode => $sourcecode );
+    my $parser = Kent::Parser::BruteForce->new( sourcecode => $sourcecode );
     my $ast = $parser->parse();
+
+    say Data::Dumper::Dumper($ast);
 
     return 1;
 }

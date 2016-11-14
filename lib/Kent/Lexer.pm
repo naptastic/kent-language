@@ -10,7 +10,7 @@ use common::sense;
 # context:      the name of the set of rules for the lexer to use.
 # ending_token: When this token is found, ... aw, shit.
 sub new {
-    my ( $class ) = @_;
+    my ( $class, $sourcecode ) = @_;
 
     my $self = { sourcecode => $sourcecode,
                  tokens     => [],
@@ -24,7 +24,7 @@ sub new {
 
 # $rules is a Kent::Lexer::State::Table object.
 sub get_next_token {
-    my ( @self, $state_table ) = @_;
+    my ( $self, $state_table ) = @_;
 
     my $current_state = 0;
 
@@ -51,7 +51,6 @@ sub get_next_token {
         }
     }
 }
-
 
 # XXX: Deprecated! Logic is being moved out to where it belongs.
 sub lex {
@@ -96,16 +95,18 @@ sub lex {
 
 sub next {
     my ( $self, $rules, $source_ref ) = @_;
-#    my $rule_table = Kent::Lexer::Rules::table($context);
 
-    foreach my $rule ( @{ $rules } ) {
+    #    my $rule_table = Kent::Lexer::Rules::table($context);
 
-        if ( ref $rule->{regex}     eq 'Regexp'
-            && ${ $source_ref } =~ s/$rule->{regex}// )
-        { return $self->_make_token( $rule, $1 ) }
+    foreach my $rule ( @{$rules} ) {
 
-        if ( ${ $source_ref } =~ s/^\Q$rule->{regex}\E// )
-        { return $self->_make_token( $rule, $1 ) }
+        if ( ref $rule->{regex} eq 'Regexp'
+             && ${$source_ref} =~ s/$rule->{regex}// )
+        {
+            return $self->_make_token( $rule, $1 );
+        }
+
+        if ( ${$source_ref} =~ s/^\Q$rule->{regex}\E// ) { return $self->_make_token( $rule, $1 ) }
     }
 
 }
@@ -141,7 +142,8 @@ sub _make_token {
     if ( $newtoken->name eq 's_NEWLINE' ) {
         $self->{line}++;
         $self->{column} = 1;
-    } else {
+    }
+    else {
         $self->{column} += $newtoken->width;
     }
 
