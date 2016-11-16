@@ -3,6 +3,7 @@ package Kent;
 use common::sense;
 
 use Kent::Parser ();
+use Kent::Parser::BruteForce ();
 use Kent::Util   ();
 use Data::Dumper ();
 

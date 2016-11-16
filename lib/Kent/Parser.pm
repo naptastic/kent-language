@@ -11,16 +11,15 @@ sub new {
     my ( $class, %args ) = @_;
 
     return bless { 'stack'      => [],
-                   'lexer'      => Kent::Lexer->new(),
+                   'lexer'      => Kent::Lexer->new( \$args{sourcecode} ),
                    'tokens'     => $args{tokens},
                    'end_with'   => $args{end_with},
-                   'sourcecode' => $args{sourcecode}, }, $class;
+                   }, $class;
 }
 # tidyon
 
 sub parse {
     my ( $self )   = @_;
-    my $sourcecode = $self->{sourcecode};
     my $lexer      = $self->{lexer};
     my $lexrules   = $self->{lexrules};
 
@@ -28,12 +27,9 @@ sub parse {
 
     my $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
 
-#    foreach (1..10) {
     while ( 1 ) {
-#    while (length $sourcecode) {
 
-        # unless ($matched) { $lexer->next( $lexrules, \$sourcecode ) }
-        my $next_token = $lexer->next( $lexrules, \$sourcecode )
+        my $next_token = $lexer->next( $lexrules )
             or die '$lexer->next returned false. Something is wrong.';
         $self->push( $next_token );
 

@@ -16,12 +16,15 @@ my @keywords   = @Kent::Lexer::Keywords::keywords;
 sub new {
     my ( $class, %args ) = @_;
 
+#    say "Creating a $args{name} token: '$args{raw}'";
+
     my $self = { 'name'         => $args{name},
                  'raw'          => $args{raw},
                  'width'        => length( $args{raw} ), #XXX: This is currently wrong for opening and closing quotes.
                  'line'         => $args{line},
                  'column'       => $args{column},
                  'next_context' => $args{next_context}};
+                 # XXX Does 'next_context' actually need to be stored here?
 
     # Is this a keyword?
     if ( $self->{name} eq 'ID' && grep { $_ eq $self->{raw} } @keywords ) {

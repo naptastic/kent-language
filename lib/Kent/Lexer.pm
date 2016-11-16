@@ -22,112 +22,19 @@ sub new {
     return bless $self, $class;
 }
 
-# $rules is a Kent::Lexer::State::Table object.
-sub get_next_token {
-    my ( $self, $state_table ) = @_;
-
-    my $current_state = 0;
-
-    # substr bookmark..position is the token once we finish yoinking characters from it.
-    $self->{bookmark} = $self->{position};
-
-    while ( 1 ) {
-        my $next_char = substr( $self->{sourcecode}, $self->{position}, 1 );
-        my $ret = $state_table->[$current_state]->do( $next_char );
-
-        if ( ref $ret eq 'Kent::Token' ) {
-
-            # Newlines are special.
-            if ( $ret->name() eq 's_NEWLINE' ) {
-                $self->{line}++;
-                $self->{column} = 1;
-            }
-
-            return $ret;
-        }
-        else {
-            $current_state = $ret;
-            $self->{position}++;
-        }
-    }
-}
-
-# XXX: Deprecated! Logic is being moved out to where it belongs.
-sub lex {
-    my ( $self ) = @_;
-    my $rule_table = $self->{rule_table};
-    my $matchfound;
-
-    while ( length $self->{sourcecode} ) {
-        $matchfound = 0;
-
-        foreach my $rule ( @$rule_table ) {
-
-            if ( ref $rule->{regex} eq 'Regexp'
-                 && $self->{sourcecode} =~ s/$rule->{regex}// )
-            {
-                $self->store( $rule, $1 );
-                $matchfound++;
-                last;
-            }
-
-            if ( $self->{sourcecode} =~ s/^(\Q$rule->{regex}\E)// ) {
-                $self->store( $rule, $rule->{regex} );
-                $matchfound++;
-                last;
-            }
-        }
-
-        # When the lexer can handle everything, this will go away.
-        if ( !$matchfound ) {
-            say Kent::Util::dump( $self->{tokens} );
-            die "Source code contained something I couldn't understand.";
-        }
-    }
-
-    push @{ $self->{tokens} },
-        Kent::Token->new( name   => 'EOF',
-                          line   => $self->{line},
-                          column => $self->{column}, );
-
-    return $self->{tokens};
-}
-
 sub next {
-    my ( $self, $rules, $source_ref ) = @_;
-
-    #    my $rule_table = Kent::Lexer::Rules::table($context);
+    my ( $self, $rules ) = @_;
 
     foreach my $rule ( @{$rules} ) {
 
-        if ( ref $rule->{regex} eq 'Regexp'
-             && ${$source_ref} =~ s/$rule->{regex}// )
-        {
-            return $self->_make_token( $rule, $1 );
+        if ( ref $rule->{regex} eq 'Regexp') {
+            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) { return $self->_make_token( $rule, $1 ); }
+        } else {
+            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) { return $self->_make_token( $rule, $rule->{regex} ) }
         }
 
-        if ( ${$source_ref} =~ s/^\Q$rule->{regex}\E// ) { return $self->_make_token( $rule, $1 ) }
     }
-
-}
-
-sub store {
-    my ( $self, $rule, $raw ) = @_;
-
-    push @{ $self->{tokens} }, $self->_make_token( $rule, $raw );
-
-    return 1;
-}
-
-sub barf {
-    my ( $self ) = @_;
-
-    foreach my $token ( @{ $self->{tokens} } ) {
-        print "[$token->{line}, $token->{column}] $token->{name} ";
-        if ( exists $token->{raw} ) { print "($token->{raw})"; }
-        print "\n";
-    }
-    return 1;
+    die "Unrecognized input at line $self->{line} column $self->{column}.";
 }
 
 sub _make_token {
