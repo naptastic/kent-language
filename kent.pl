@@ -6,6 +6,7 @@ use Kent::Parser ();
 use Kent::Parser::BruteForce ();
 use Kent::Util   ();
 use Data::Dumper ();
+$Data::Dumper::Sortkeys = 1;
 
 script( @ARGV ) unless caller;
 
