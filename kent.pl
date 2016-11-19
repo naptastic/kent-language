@@ -19,8 +19,6 @@ sub script {
     my ( $filename ) = @_;
     my $sourcecode = Kent::Util::slurp( $filename );
 
-    say "loaded source code from $filename";
-
     my $parser = Kent::Parser::BruteForce->new( sourcecode => $sourcecode );
     my $ast = $parser->parse();
 
