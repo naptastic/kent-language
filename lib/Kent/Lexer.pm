@@ -7,13 +7,14 @@ use Kent::Util            ();
 use common::sense;
 
 # sourcecode:   a string to tokenize. You should probably load the whole file.
-# context:      the name of the set of rules for the lexer to use.
-# ending_token: When this token is found, ... aw, shit.
+# ruleset:      the name of the ruleset to use.
+
 sub new {
     my ( $class, $sourcecode ) = @_;
 
     my $self = { sourcecode => $sourcecode,
                  tokens     => [],
+                 ruleset    => 'code',
                  line       => 1,
                  column     => 1,
                  position   => 0,
@@ -23,19 +24,25 @@ sub new {
 }
 
 sub next {
-    my ( $self, $rules ) = @_;
+    my ( $self ) = @_;
 
     foreach my $rule ( @{$rules} ) {
 
-        if ( ref $rule->{regex} eq 'Regexp') {
-            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) { return $self->_make_token( $rule, $1 ); }
-        } else {
-            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) { return $self->_make_token( $rule, $rule->{regex} ) }
+        if ( ref $rule->{regex} eq 'Regexp' ) {
+            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) {
+                return $self->_make_token( $rule, $1 );
+            }
         }
-
+        else {
+            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) {
+                return $self->_make_token( $rule, $rule->{regex} );
+            }
+        }
     }
     die "Unrecognized input at line $self->{line} column $self->{column}.";
 }
+
+sub switch_rules { $_[0]->{ruleset} = $_[1] }
 
 sub _make_token {
     my ( $self, $rule, $raw ) = @_;
@@ -46,7 +53,7 @@ sub _make_token {
                                      column       => $self->{column},
                                      next_context => $rule->{next_context}, );
 
-    if ( $newtoken->name eq 's_NEWLINE' ) {
+    if ( $newtoken->name eq 'newline' ) {
         $self->{line}++;
         $self->{column} = 1;
     }

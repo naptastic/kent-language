@@ -3,6 +3,9 @@ use common::sense;
 
 our @keywords = (
 
+    # NOTE: All single-character identifiers are reserved.
+    # TODO: Put them in the lexer...
+
     # Builtin functions that are also methods for some Types.
     qw/ sprintf say print select open /,
 
@@ -33,6 +36,9 @@ our @keywords = (
     # Methods for Strings
     qw/ num length append prepend split /,
 
+    # Methods for Arrays
+    qw/ sort /,
+
     # Methods for Arrays, Hashes, and Collections
     qw/ count /,
 
@@ -41,6 +47,9 @@ our @keywords = (
 
     # Methods for Arrays and Collections
     qw/ join shift unshift push pop insert delete indexes /,
+
+    # Methods for Statements
+    qw/ comment /,
 
     # Roles
     qw/ role private const /,
@@ -55,7 +64,7 @@ our @keywords = (
     qw/ must throw trap except /,
 
     # Variables inside special code blocks
-    qw/ key value args a b i /,
+    qw/ key value args /,
 
     # Reserved for the sake of being reserved
     qw/ package pkg /, );
