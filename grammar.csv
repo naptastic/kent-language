@@ -21,13 +21,13 @@ literal,range,,,,,,
 fqid,dot,,,,,,
 fqid,id,,,,,,
 fqid,access,,,,,,
-fqid,name access,,,,,,
+fqid,name,access,,,,,
 access,dot,id,,,,,
 access,dot,lbrace,id,rbrace,,,
 ,,,,,,,
 expr,id,,,,,,1
 expr,id,plusplus,,,,,1
-expr,id,minuxminux,,,,,1
+expr,id,minusminus,,,,,1
 expr,bang,id,,,,,1
 expr,minus,id,,,,,1
 expr,plusplus,id,,,,,1
@@ -90,7 +90,7 @@ loop,for,id,in,range,codeblock,,
 loop,while,condition,codeblock,,,,
 loop,until,condition,codeblock,,,,
 ,,,,,,,
-char,char char,,,,,,
+char,char,char,,,,,
 comment,lcmt,rcmt,,,,,
 comment,lcmt,char,rcmt,,,,
 annotated,comment,statement,,,,,

@@ -3,7 +3,6 @@ package Kent::Parser;
 use common::sense;
 use Kent::Lexer;
 use Kent::Lexer::Rules;
-use Kent::Parser::Rules;
 use Data::Dumper;
 
 # tidyoff
