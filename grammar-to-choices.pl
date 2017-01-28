@@ -5,7 +5,12 @@ use warnings;
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 
+use JSON;
+
 my $grammar_filename = 'grammar.csv';
+my $debug = 1;
+
+my $printer = JSON->new->canonical(1)->pretty(1);
 
 my @lines;
 my $choices = {};
@@ -28,24 +33,39 @@ foreach my $line ( @lines ) {
 
     my $ref = $choices;
 
+    if ($debug) {
+        system('clear');
+        print "@elements -> $token_name\n";
+        #print Dumper( $choices );
+        print $printer->encode($choices);
+        <>;
+    }
+
     while (1)  {
 
         my $element = shift @elements;
 
         if ( scalar @elements == 0 ) {
-            $ref->{$element} = $token_name;
+            if (ref $ref->{$element} eq 'HASH') {
+                $ref->{$element}{'space'} = $token_name;
+            }
+            else {
+                $ref->{$element} = $token_name;
+            }
             last;
         }
         else {
             $ref->{$element} //= {};
-            if (ref $ref->{$element} eq 'HASH') { $ref = $ref->{$element}; }
+            if (ref $ref->{$element} eq 'HASH') {
+                $ref = $ref->{$element};
+            }
             else {
                 my $holder = $ref->{$element};
-                $ref->{$element} = { 's_SPACE' => $holder, $element => {} };
+                $ref->{$element} = { 'space' => $holder };
                 $ref = $ref->{$element};
             }
         }
+
     }
 }
 
-print Dumper( $choices );
