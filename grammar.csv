@@ -13,8 +13,8 @@ fqid,id,,,,,,Access,1,11
 ,,,,,,,,,12
 element,expr,comma,,,,,Arrays,,13
 element,statement,comma,,,,,Arrays,,14
-element,element,comma,expr,comma,,,Arrays,,15
-element,element,comma,statement,comma,,,Arrays,,16
+element,element,expr,comma,,,,Arrays,,15
+element,element,statement,comma,,,,Arrays,,16
 array,embraces,,,,,,Arrays,,17
 array,lbrace,expr,rbrace,,,,Arrays,,18
 array,lbrace,element,rbrace,,,,Arrays,,19
@@ -120,6 +120,6 @@ statement,fqid,parenexpr,,,,,Statements,,118
 statement,loop,,,,,,Statements,,119
 ,,,,,,,,,120
 code,statement,comma,,,,,Structure,,121
-file,code,statement,,,,,Structure,,122
-file,code,,,,,,Structure,,123
-file,statement,,,,,,Structure,,124
+file,code,statement,eof,,,,Structure,,122
+file,code,eof,,,,,Structure,,123
+file,statement,eof,,,,,Structure,,124
