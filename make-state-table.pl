@@ -32,10 +32,13 @@ foreach my $state ( @{$states} ) {
     say "$state->{name}";
     if ( $state->{returns} ) {
         say "    return: $state->{returns} with $state->{depth} parts";
+        say;
     }
     else {
-        say "    other:  $_" foreach @{ $state->{others} };
-        say "    next:   $_" foreach @{ $state->{nexts} };
+        say "    nows:   $_" foreach @{ $state->{nows} };
+        say "    nexts:  $_" foreach @{ $state->{nexts} };
+        say "    others: $_" foreach @{ $state->{others} };
+        say;
     }
 }
 
@@ -46,11 +49,10 @@ sub rules_from_lines {
     foreach my $line ( @{$lines} ) {
         my $rule = {};
         my @parts = split( /,/, $line );
-        $rule->{token_name}   = $parts[0];
-        $rule->{parts}        = [ grep { $_ ne '' } @parts[ 1 .. 6 ] ];
-        $rule->{category}     = $parts[7];
-        $rule->{forbid_space} = $parts[8];
-        $rule->{sort_order}   = $parts[9];
+        $rule->{token_name} = $parts[0];
+        $rule->{parts}      = [ grep { $_ ne '' } @parts[ 1 .. 6 ] ];
+        $rule->{category}   = $parts[7];
+        $rule->{sort_order} = $parts[8];
         push @{$rules}, $rule;
     }
     return $rules;
@@ -111,12 +113,29 @@ sub states_from_choices {
 
     foreach my $key ( sort keys %$choices ) {
         if ( ref $choices->{$key} eq 'HASH' ) {
+
+            # "nows" have to be checked before whitespace is discarded.
+            #     ( "nows" is short for "no whitespace allowed" )
+            # "nexts" are checked right after whitespace is discarded.
+            #     They will call $name_so_far_$next.
+            # "others" are checked last. Their return replaces the token being
+            #     evaluated, and we go back to checking "nexts". They
+            #     will call their own name, as if starting from scratch.
+            my ( @nows, @nexts, @laters );
+            foreach my $choice ( sort keys %{ $choices->{$key} } ) {
+                next if ref $choice eq 'HASH';
+                if   ( $choice =~ m/[*]/ ) { push @nows,  $choice; }
+                else                       { push @nexts, $choice; }
+            }
+
+            foreach my $now ( @nows ) { $now =~ s/[*]//; }
             push @states,
                 { name   => "$name_so_far$key",
-                  nexts  => [ sort keys %{ $choices->{$key} } ],
+                  nows   => \@nows,
+                  nexts  => \@nexts,
                   others => find_valid_nexts( $choices->{$key} ),
-                },
-                push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
+                };
+            push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
         }
         else {
             push @states,
@@ -125,6 +144,7 @@ sub states_from_choices {
                   depth   => $depth, };
         }
     }
+    foreach my $state ( @states ) { $state->{name} =~ s/[*]//; }
     return \@states;
 }
 
@@ -133,6 +153,7 @@ sub find_valid_nexts {
     my %valid_nexts;
 
     foreach my $key ( sort keys %{$state} ) {
+
         foreach my $rule ( grep { $_->{token_name} eq $key } @{$rules} ) {
             $valid_nexts{ $rule->{parts}[0] } = 1;
         }

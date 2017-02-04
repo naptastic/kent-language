@@ -1,125 +1,126 @@
-compound,Token 1,Token 2,Token 3,Token 4,Token 5,Token 6,category,Forbid whitespace?,Sort Order
-,,,,,,,,,1
-embraces,lbrace,rbrace,,,,,Multi-use,,2
-emcurlies,lcurly,rcurly,,,,,Multi-use,,3
-emparens,lparen,rparen,,,,,Multi-use,,4
-parenexpr,lparen,expr,rparen,,,,Multi-use,,5
-,,,,,,,,,6
-access,dot,id,,,,,Access,1,7
-access,dot,lbrace,id,rbrace,,,Access,1,8
-fqid,access,,,,,,Access,1,9
-fqid,dot,,,,,,Access,1,10
-fqid,id,,,,,,Access,1,11
-,,,,,,,,,12
-element,expr,comma,,,,,Arrays,,13
-element,statement,comma,,,,,Arrays,,14
-element,element,expr,comma,,,,Arrays,,15
-element,element,statement,comma,,,,Arrays,,16
-array,embraces,,,,,,Arrays,,17
-array,lbrace,expr,rbrace,,,,Arrays,,18
-array,lbrace,element,rbrace,,,,Arrays,,19
-array,lbrace,statement,rbrace,,,,Arrays,,20
-array,lbrace,element,expr,rbrace,,,Arrays,,21
-array,lbrace,element,statement,rbrace,,,Arrays,,22
-,,,,,,,,,23
-char,char,char,,,,,Comments,,24
-comment,lcmt,char,rcmt,,,,Comments,,25
-comment,lcmt,rcmt,,,,,Comments,,26
-annotated,annotated,comment,,,,,Comments,,27
-annotated,comment,annotated,,,,,Comments,,28
-annotated,comment,statement,,,,,Comments,,29
-annotated,statement,comment,,,,,Comments,,30
-,,,,,,,,,31
-cond,expr,eqeq,expr,,,,Conditionals,,32
-cond,expr,gt,expr,,,,Conditionals,,33
-cond,expr,lt,expr,,,,Conditionals,,34
-cond,expr,match,expr,,,,Conditionals,,35
-cond,expr,ne,expr,,,,Conditionals,,36
-cond,expr,ngt,expr,,,,Conditionals,,37
-cond,expr,nle,expr,,,,Conditionals,,38
-cond,expr,nomatch,expr,,,,Conditionals,,39
-,,,,,,,,,40
-expr,bang,fqid,,,,,Expressions,1,41
-expr,fqid,minusminus,,,,,Expressions,1,42
-expr,fqid,plusplus,,,,,Expressions,1,43
-expr,fqid,,,,,,Expressions,1,44
-expr,minus,fqid,,,,,Expressions,1,45
-expr,minusminus,fqid,,,,,Expressions,1,46
-expr,plusplus,fqid,,,,,Expressions,1,47
-,,,,,,,,,48
-expr,literal,,,,,,Expressions,,49
-,,,,,,,,,50
-expr,expr,binand,expr,,,,Expressions,,51
-expr,expr,binor,expr,,,,Expressions,,52
-expr,expr,binxor,expr,,,,Expressions,,53
-expr,expr,shl,expr,,,,Expressions,,54
-expr,expr,shr,expr,,,,Expressions,,55
-,,,,,,,,,56
-expr,expr,logand,expr,,,,Expressions,,57
-expr,expr,logor,expr,,,,Expressions,,58
-expr,expr,logxor,expr,,,,Expressions,,59
-,,,,,,,,,60
-expr,expr,fslash,expr,,,,Expressions,,61
-expr,expr,minus,expr,,,,Expressions,,62
-expr,expr,plus,expr,,,,Expressions,,63
-expr,expr,star,expr,,,,Expressions,,64
-expr,expr,starstar,expr,,,,Expressions,,65
-,,,,,,,,,66
-ifblock,if,cond,codeblock,,,,Flow Control,,67
-ifblock,if,fqid,codeblock,,,,Flow Control,,68
-elseblock,else,codeblock,,,,,Flow Control,,69
-elseifblock,elseif,cond,codeblock,,,,Flow Control,,70
-elseifblock,elseif,fqid,codeblock,,,,Flow Control,,71
-elseifblock,elseifblock,elseif,cond,codeblock,,,Flow Control,,72
-branch,ifblock,elseblock,,,,,Flow Control,,73
-branch,ifblock,elseifblock,elseblock,,,,Flow Control,,74
-branch,ifblock,elseifblock,,,,,Flow Control,,75
-branch,ifblock,,,,,,Flow Control,,76
-,,,,,,,,,77
-loop,for,fqid,codeblock,,,,Flow Control,,78
-loop,for,id,in,fqid,array,,Flow Control,,79
-loop,for,id,in,range,array,,Flow Control,,80
-loop,for,range,array,,,,Flow Control,,81
-loop,until,condition,array,,,,Flow Control,,82
-loop,while,condition,array,,,,Flow Control,,83
-,,,,,,,,,84
-hash,emcurlies,,,,,,Hashes,,85
-hash,lcurly,hashkey,rcurly,,,,Hashes,,86
-hash,lcurly,hashkey,str,hashrocket,expr,rcurly,Hashes,,87
-hash,lcurly,str,hashrocket,expr,rcurly,,Hashes,,88
-hashkey,hashkey,comma,str,hashrocket,expr,comma,Hashes,,89
-hashkey,str,hashrocket,expr,comma,,,Hashes,,90
-,,,,,,,,,91
-literal,num,,,,,,Literals,,92
-literal,range,,,,,,Literals,,93
-literal,str,,,,,,Literals,,94
-num,hex,,,,,,Literals,,95
-num,int,,,,,,Literals,,96
-num,oct,,,,,,Literals,,97
-num,rat,,,,,,Literals,,98
-num,sci,,,,,,Literals,,99
-range,id,dotdot,id,,,,Literals,1,100
-range,id,dotdot,int,,,,Literals,1,101
-range,int,dotdot,id,,,,Literals,1,102
-range,int,dotdot,int,,,,Literals,1,103
-,,,,,,,,,104
-statement,fqid,eq,expr,,,,Statements,,105
-statement,fqid,eq,fqid,,,,Statements,,106
-statement,fqid,compose,array,,,,Statements,,107
-statement,fqid,compose,fqid,,,,Statements,,108
-statement,fqid,compose,function,,,,Statements,,109
-statement,fqid,compose,hash,,,,Statements,,110
-statement,fqid,compose,num,,,,Statements,,111
-statement,fqid,compose,str,,,,Statements,,112
-statement,annotated,,,,,,Statements,,113
-statement,array,,,,,,Statements,,114
-statement,branch,,,,,,Statements,,115
-statement,fqid,arglist,,,,,Statements,,116
-statement,fqid,emparens,,,,,Statements,,117
-statement,fqid,parenexpr,,,,,Statements,,118
-statement,loop,,,,,,Statements,,119
-,,,,,,,,,120
-code,statement,comma,,,,,Structure,,121
-file,code,statement,eof,,,,Structure,,122
-file,code,eof,,,,,Structure,,123
-file,statement,eof,,,,,Structure,,124
+compound,Token 1,Token 2,Token 3,Token 4,Token 5,Token 6,category,Sort Order
+,,,,,,,,1
+embraces,lbrace,rbrace,,,,,Multi-use,2
+emcurlies,lcurly,rcurly,,,,,Multi-use,3
+emparens,lparen,rparen,,,,,Multi-use,4
+parenexpr,lparen,expr,rparen,,,,Multi-use,5
+,,,,,,,,6
+access,dot,*fqid,,,,,Access,7
+access,dot,*lbrace,id,rbrace,,,Access,8
+fqid,*access,,,,,,Access,9
+fqid,access,,,,,,Access,9
+fqid,dot,,,,,,Access,10
+fqid,id,,,,,,Access,11
+,,,,,,,,12
+element,expr,comma,,,,,Arrays,13
+element,statement,comma,,,,,Arrays,14
+element,element,expr,comma,,,,Arrays,15
+element,element,statement,comma,,,,Arrays,16
+array,embraces,,,,,,Arrays,17
+array,lbrace,expr,rbrace,,,,Arrays,18
+array,lbrace,element,rbrace,,,,Arrays,19
+array,lbrace,statement,rbrace,,,,Arrays,20
+array,lbrace,element,expr,rbrace,,,Arrays,21
+array,lbrace,element,statement,rbrace,,,Arrays,22
+,,,,,,,,23
+char,char,char,,,,,Comments,24
+comment,lcmt,char,rcmt,,,,Comments,25
+comment,lcmt,rcmt,,,,,Comments,26
+annotated,annotated,comment,,,,,Comments,27
+annotated,comment,annotated,,,,,Comments,28
+annotated,comment,statement,,,,,Comments,29
+annotated,statement,comment,,,,,Comments,30
+,,,,,,,,31
+cond,expr,eqeq,expr,,,,Conditionals,32
+cond,expr,gt,expr,,,,Conditionals,33
+cond,expr,lt,expr,,,,Conditionals,34
+cond,expr,match,expr,,,,Conditionals,35
+cond,expr,ne,expr,,,,Conditionals,36
+cond,expr,ngt,expr,,,,Conditionals,37
+cond,expr,nle,expr,,,,Conditionals,38
+cond,expr,nomatch,expr,,,,Conditionals,39
+,,,,,,,,40
+expr,bang,*fqid,,,,,Expressions,41
+expr,fqid,*minusminus,,,,,Expressions,42
+expr,fqid,*plusplus,,,,,Expressions,43
+expr,fqid,,,,,,Expressions,44
+expr,minus,*fqid,,,,,Expressions,45
+expr,minusminus,*fqid,,,,,Expressions,46
+expr,plusplus,*fqid,,,,,Expressions,47
+,,,,,,,,48
+expr,literal,,,,,,Expressions,49
+,,,,,,,,50
+expr,expr,binand,expr,,,,Expressions,51
+expr,expr,binor,expr,,,,Expressions,52
+expr,expr,binxor,expr,,,,Expressions,53
+expr,expr,shl,expr,,,,Expressions,54
+expr,expr,shr,expr,,,,Expressions,55
+,,,,,,,,56
+expr,expr,logand,expr,,,,Expressions,57
+expr,expr,logor,expr,,,,Expressions,58
+expr,expr,logxor,expr,,,,Expressions,59
+,,,,,,,,60
+expr,expr,fslash,expr,,,,Expressions,61
+expr,expr,minus,expr,,,,Expressions,62
+expr,expr,plus,expr,,,,Expressions,63
+expr,expr,star,expr,,,,Expressions,64
+expr,expr,starstar,expr,,,,Expressions,65
+,,,,,,,,66
+ifblock,if,cond,codeblock,,,,Flow Control,67
+ifblock,if,fqid,codeblock,,,,Flow Control,68
+elseblock,else,codeblock,,,,,Flow Control,69
+elseifblock,elseif,cond,codeblock,,,,Flow Control,70
+elseifblock,elseif,fqid,codeblock,hashrocket,,,Flow Control,71
+elseifblock,elseifblock,elseif,cond,codeblock,,,Flow Control,72
+branch,ifblock,elseblock,,,,,Flow Control,73
+branch,ifblock,elseifblock,elseblock,,,,Flow Control,74
+branch,ifblock,elseifblock,,,,,Flow Control,75
+branch,ifblock,,,,,,Flow Control,76
+,,,,,,,,77
+loop,for,fqid,codeblock,,,,Flow Control,78
+loop,for,id,in,fqid,array,,Flow Control,79
+loop,for,id,in,range,array,,Flow Control,80
+loop,for,range,array,,,,Flow Control,81
+loop,until,condition,array,,,,Flow Control,82
+loop,while,condition,array,,,,Flow Control,83
+,,,,,,,,84
+hash,emcurlies,,,,,,Hashes,85
+hash,lcurly,hashkey,rcurly,,,,Hashes,86
+hash,lcurly,hashkey,str,hashrocket,expr,rcurly,Hashes,87
+hash,lcurly,str,hashrocket,expr,rcurly,,Hashes,88
+hashkey,hashkey,comma,str,hashrocket,expr,comma,Hashes,89
+hashkey,str,hashrocket,expr,comma,,,Hashes,90
+,,,,,,,,91
+literal,num,,,,,,Literals,92
+literal,range,,,,,,Literals,93
+literal,str,,,,,,Literals,94
+num,hex,,,,,,Literals,95
+num,int,,,,,,Literals,96
+num,oct,,,,,,Literals,97
+num,rat,,,,,,Literals,98
+num,sci,,,,,,Literals,99
+range,id,*dotdot,*id,,,,Literals,100
+range,id,*dotdot,*int,,,,Literals,101
+range,int,*dotdot,*id,,,,Literals,102
+range,int,*dotdot,*int,,,,Literals,103
+,,,,,,,,104
+statement,fqid,eq,expr,,,,Statements,105
+statement,fqid,eq,fqid,,,,Statements,106
+statement,fqid,compose,array,,,,Statements,107
+statement,fqid,compose,fqid,,,,Statements,108
+statement,fqid,compose,function,,,,Statements,109
+statement,fqid,compose,hash,,,,Statements,110
+statement,fqid,compose,num,,,,Statements,111
+statement,fqid,compose,str,,,,Statements,112
+statement,annotated,,,,,,Statements,113
+statement,array,,,,,,Statements,114
+statement,branch,,,,,,Statements,115
+statement,fqid,arglist,,,,,Statements,116
+statement,fqid,emparens,,,,,Statements,117
+statement,fqid,parenexpr,,,,,Statements,118
+statement,loop,,,,,,Statements,119
+,,,,,,,,120
+code,statement,comma,,,,,Structure,121
+file,code,statement,eof,,,,Structure,122
+file,code,eof,,,,,Structure,123
+file,statement,eof,,,,,Structure,124
