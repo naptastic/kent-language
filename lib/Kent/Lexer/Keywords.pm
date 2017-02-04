@@ -19,7 +19,7 @@ our @keywords = (
     # Handle methods
     # XXX: This needs research, thought, and planning.
     qw/ opened close fileno mode irs ors autoflush eof fcntl getc ioctl read
-        sysread syswrite truncate /,
+        say print select sysread syswrite truncate mode read /,
 
     # Methods for Strings, Numbers, Arrays, Hashes, and Collections
     qw/ each map rmap grep rgrep /,
@@ -54,9 +54,9 @@ our @keywords = (
     # Exceptions
     qw/ must throw trap except /,
 
-    # Variables inside special code blocks
-    qw/ key value args a b i /,
-
     # Reserved for the sake of being reserved
     qw/ package pkg /, );
+
+    # Variables inside special code blocks
+    qw/ key value args a b i /, );
 1;
