@@ -124,7 +124,7 @@ sub states_from_choices {
                   nows   => \@nows,
                   nexts  => \@nexts,
                   depth  => $depth,
-                  others => find_valid_nexts( $choices->{$key} ),
+                  others => find_others( $choices->{$key} ),
                 };
             push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
         }
@@ -139,18 +139,18 @@ sub states_from_choices {
     return \@states;
 }
 
-sub find_valid_nexts {
-    my ( $state ) = @_;
-    my %valid_nexts;
+sub find_others {
+    my ( $choice ) = @_;
+    my %others;
 
-    foreach my $key ( sort keys %{$state} ) {
+    foreach my $key ( sort keys %{$choice} ) {
 
         foreach my $rule ( grep { $_->{token_name} eq $key } @{$rules} ) {
-            $valid_nexts{ $rule->{parts}[0] } = 1;
+            $others{ $rule->{parts}[0] } = 1;
         }
     }
 
-    return [ sort keys %valid_nexts ];
+    return [ sort keys %others ];
 }
 
 sub summarize_rules {
