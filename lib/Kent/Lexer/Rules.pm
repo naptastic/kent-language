@@ -33,7 +33,7 @@ our %pairs = ( @qchars, reverse @qchars );
 #
 sub code_rules {
     return [
-    [ qr/^$/,                       'EOF',           'eof',     ],
+    [ qr/^$/,                       'eof',           'eof',     ],
 
     # Tokens that cause us to move to a different context
     # The quoting stuff returns the wrong number of characters.
@@ -44,42 +44,63 @@ sub code_rules {
     [ '/* ',                        'CMT_BEGIN',     'comment', ],
 
     # Basics
-    [ qr/^([\t\f\r ]+)/,            's_SPACE',       'code',    ],
-    [ qr/^(\n)/,                    's_NEWLINE',     'code',    ],
-    [ qr/^([A-Za-z][A-Za-z0-9_]*)/, 's_ID',          'code',    ],
-    [ '.',                          's_DOT',         'code',    ],
-    [ ':',                          's_COLON',       'code',    ],
-    [ qr/^(\d+)/,                   's_DIGITS',      'code',    ],
-    [ '\\',                         's_ESC',         'code',    ],
+    # TODO: Forbid tabs
+    [ qr/^([\t\f\r ]+)/,                     'space',         'code',    ],
+    [ qr/^(\n)/,                             'newline',       'code',    ],
+    [ qr/^([A-Za-z_][A-Za-z0-9_]*)/,         'id',            'code',    ],
+    [ qr/^(0x[0-9A-Fa-f]+)/,                 'hex',           'code',    ],
+    [ qr/^(0[0-7]+)/,                        'oct',           'code',    ],
+    [ qr/^(-?[1-9][0-9]*)/,                  'int',           'code',    ],
+    [ qr/^(-?[1-9][0-9]*\.[0-9]+)/,          'rat',           'code',    ],
+    [ qr/^(-?[1-9]\.[0-9]+-?e[1-9][0-9]*)/i, 'sci',           'code',    ],
+    [ '..',                                  'dotdot',        'code',    ],
+    [ '.',                                   'dot',           'code',    ],
+    [ '::',                                  'coloncolon',    'code',    ],
+    [ ':',                                   'colon',         'code',    ], # somehow this isn't used anywhere.
+    [ '%',                                   'percent',       'code',    ],
+    [ '\\',                                  'bslashbslash',  'code',    ],
 
     # Comparison
-    # TODO: Heredocs; binary shifting.
-    [ '<=>',                        'o_NCMP',        'code',    ],
-    [ '==',                         'o_EQ',          'code',    ],
-    [ '=<',                         'o_LE',          'code',    ],
-    [ '>=',                         'o_GE',          'code',    ],
-    [ '<',                          'o_LT',          'code',    ],
-    [ '>',                          'o_GT',          'code',    ],
+    # TODO: Heredocs
+    [ '<=>',                        'cmp',           'code',    ],
+    [ '=>',                         'hashrocket',    'code',    ],
+    [ '==',                         'eqeq',          'code',    ],
+    [ '~~',                         'match',         'code',    ],
+    [ '!~',                         'nomatch',       'code',    ],
+    [ '!<',                         'nlt',           'code',    ],
+    [ '!>',                         'ngt',           'code',    ],
+    [ '||',                         'logor',         'code',    ],
+    [ '&&',                         'logand',        'code',    ],
+    [ '^^',                         'logxor',        'code',    ],
+    [ '|',                          'binor',         'code',    ],
+    [ '&',                          'binand',        'code',    ],
+    [ '^',                          'binxor',        'code',    ],
+    [ '<<',                         'shl',           'code',    ],
+    [ '>>',                         'shr',           'code',    ],
+    [ '<',                          'lt',            'code',    ],
+    [ '>',                          'gt',            'code',    ],
 
     # Basic Syntax
-    [ '=',                          'o_SET',         'code',    ],
-    [ ';',                          'o_SEMI',        'code',    ],
-    [ '(',                          'o_EXPR_BEGIN',  'code',    ],
-    [ ')',                          'o_EXPR_END',    'code',    ],
-    [ ',',                          'o_NEXT',        'code',    ],
-    [ '{',                          'o_SCOPE_BEGIN', 'code',    ],
-    [ '}',                          'o_SCOPE_END',   'code',    ],
+    [ '=',                          'eq',            'code',    ],
+    [ ';',                          'semicolon',     'code',    ], # somehow this isn't used anywhere.
+    [ '(',                          'lparen',        'code',    ],
+    [ ')',                          'rparen',        'code',    ],
+    [ ',',                          'comma',         'code',    ],
+    [ '{',                          'lcurly',        'code',    ],
+    [ '}',                          'rcurly',        'code',    ],
+    [ '[',                          'lbrace',        'code',    ],
+    [ ']',                          'rbrace',        'code',    ],
 
     # Arithmetic
-    [ '++',                         'o_INCR_1',      'code',    ],
-    [ '+=',                         'o_INCR',        'code',    ],
-    [ '+',                          'o_ADD',         'code',    ],
-    [ '**',                         'o_POW',         'code',    ],
-    [ '*',                          'o_MUL',         'code',    ],
-    [ '/',                          'o_DIV',         'code',    ],
-    [ '--',                         'o_DECR_1',      'code',    ],
-    [ '-=',                         'o_DECR',        'code',    ],
-    [ '-',                          's_MINUS',       'code',    ], ];
+    [ '++',                         'plusplus',      'code',    ],
+    [ '+=',                         'pluseq',        'code',    ],
+    [ '+',                          'plus',          'code',    ],
+    [ '**',                         'starstar',      'code',    ],
+    [ '*',                          'star',          'code',    ],
+    [ '/',                          'fslash',        'code',    ],
+    [ '--',                         'minusminus',    'code',    ],
+    [ '-=',                         'minuseq',       'code',    ],
+    [ '-',                          'minus',         'code',    ], ];
 }
 
 sub comment_rules {
