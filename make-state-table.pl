@@ -142,11 +142,17 @@ sub states_from_choices {
 sub find_others {
     my ( $choice ) = @_;
     my %others;
+    my @to_check;
 
-    foreach my $key ( sort keys %{$choice} ) {
+    push @to_check, keys %{ $choice };
+
+    while (scalar @to_check) {
+        my $key = shift @to_check;
 
         foreach my $rule ( grep { $_->{token_name} eq $key } @{$rules} ) {
-            $others{ $rule->{parts}[0] } = 1;
+            my $other = $rule->{parts}[0];
+            push @to_check, $other unless defined $others{$other};
+            $others{$other} = 1;
         }
     }
 
@@ -252,6 +258,6 @@ sub print_state_table_module {
             say '';
         }
     }
-    say "\n1;";
+    say "1;";
     return 1;
 }

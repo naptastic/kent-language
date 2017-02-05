@@ -102,12 +102,24 @@ sub bof {
   AGAIN:
     if ($token->name eq 'code') { return Kent::Parser::States::bof_code($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::bof_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
     if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -123,11 +135,24 @@ sub bof_code {
   AGAIN:
     if ($token->name eq 'eof') { return Kent::Parser::States::bof_code_eof($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::bof_code_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -253,13 +278,24 @@ sub comment {
   AGAIN:
     if ($token->name eq 'annotated') { return Kent::Parser::States::comment_annotated($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::comment_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
     if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
     if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -399,17 +435,38 @@ sub element {
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::element_expr($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::element_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -516,9 +573,23 @@ sub elseif {
     if ($token->name eq 'cond') { return Kent::Parser::States::elseif_cond($self); }
     if ($token->name eq 'fqid') { return Kent::Parser::States::elseif_fqid($self); }
     if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
     if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
     if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -621,7 +692,24 @@ sub elseifblock_elseif {
 
   AGAIN:
     if ($token->name eq 'cond') { return Kent::Parser::States::elseifblock_elseif_cond($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -742,13 +830,24 @@ sub expr_binand {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_binand_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -779,13 +878,24 @@ sub expr_binor {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_binor_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -816,13 +926,24 @@ sub expr_binxor {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_binxor_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -869,13 +990,24 @@ sub expr_eqeq {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_eqeq_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -906,13 +1038,24 @@ sub expr_fslash {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_fslash_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -943,13 +1086,24 @@ sub expr_gt {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_gt_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -980,13 +1134,24 @@ sub expr_logand {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_logand_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1017,13 +1182,24 @@ sub expr_logor {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_logor_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1054,13 +1230,24 @@ sub expr_logxor {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_logxor_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1091,13 +1278,24 @@ sub expr_lt {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_lt_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1128,13 +1326,24 @@ sub expr_match {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_match_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1165,13 +1374,24 @@ sub expr_minus {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_minus_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1202,13 +1422,24 @@ sub expr_ne {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_ne_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1239,13 +1470,24 @@ sub expr_ngt {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_ngt_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1276,13 +1518,24 @@ sub expr_nlt {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_nlt_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1313,13 +1566,24 @@ sub expr_nomatch {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_nomatch_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1350,13 +1614,24 @@ sub expr_percent {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_percent_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1387,13 +1662,24 @@ sub expr_plus {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_plus_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1424,13 +1710,24 @@ sub expr_shl {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_shl_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1461,13 +1758,24 @@ sub expr_shr {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_shr_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1498,13 +1806,24 @@ sub expr_star {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_star_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1535,13 +1854,24 @@ sub expr_starstar {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::expr_starstar_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -1852,6 +2182,7 @@ sub fqid_compose {
     if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
     if ($token->name eq 'lcurly') { $token = Kent::Parser::States::lcurly($self); goto AGAIN; }
+    if ($token->name eq 'lparen') { $token = Kent::Parser::States::lparen($self); goto AGAIN; }
     if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
     if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
@@ -1987,11 +2318,19 @@ sub fqid_eq {
     if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
     if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2096,13 +2435,24 @@ sub hashkey_comma_str_hashrocket {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::hashkey_comma_str_hashrocket_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2231,9 +2581,23 @@ sub if {
     if ($token->name eq 'cond') { return Kent::Parser::States::if_cond($self); }
     if ($token->name eq 'fqid') { return Kent::Parser::States::if_fqid($self); }
     if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
     if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
     if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2488,19 +2852,39 @@ sub lbrace {
     if ($token->name eq 'expr') { return Kent::Parser::States::lbrace_expr($self); }
     if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_rbrace($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::lbrace_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'element') { $token = Kent::Parser::States::element($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
     if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2517,17 +2901,38 @@ sub lbrace_element {
     if ($token->name eq 'expr') { return Kent::Parser::States::lbrace_element_expr($self); }
     if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_element_rbrace($self); }
     if ($token->name eq 'statement') { return Kent::Parser::States::lbrace_element_statement($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
     if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
     if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'for') { $token = Kent::Parser::States::for($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'if') { $token = Kent::Parser::States::if($self); goto AGAIN; }
+    if ($token->name eq 'ifblock') { $token = Kent::Parser::States::ifblock($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
+    if ($token->name eq 'until') { $token = Kent::Parser::States::until($self); goto AGAIN; }
+    if ($token->name eq 'while') { $token = Kent::Parser::States::while($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2818,13 +3223,24 @@ sub lcurly_hashkey_str_hashrocket {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::lcurly_hashkey_str_hashrocket_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2899,13 +3315,24 @@ sub lcurly_str_hashrocket {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::lcurly_str_hashrocket_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -2959,13 +3386,24 @@ sub lparen {
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::lparen_expr($self); }
     if ($token->name eq 'rparen') { return Kent::Parser::States::lparen_rparen($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
@@ -3215,13 +3653,24 @@ sub str_hashrocket {
 
   AGAIN:
     if ($token->name eq 'expr') { return Kent::Parser::States::str_hashrocket_expr($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
     if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
     if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
     if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
     if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
     if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
     if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'num') { $token = Kent::Parser::States::num($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
     if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'range') { $token = Kent::Parser::States::range($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
     die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
