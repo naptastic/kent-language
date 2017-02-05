@@ -55,7 +55,7 @@ our @keywords = (
     qw/ must throw trap except /,
 
     # Reserved for the sake of being reserved
-    qw/ package pkg /, );
+    qw/ package pkg /,
 
     # Variables inside special code blocks
     qw/ key value args a b i /, );

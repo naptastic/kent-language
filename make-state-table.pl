@@ -26,7 +26,8 @@ my $rules   = rules_from_lines( $lines );
 my $choices = choices_from_rules( $rules );
 my $states  = states_from_choices( $choices );
 
-summarize_rules($rules);
+# summarize_rules($rules);
+print_state_table_module($states);
 
 exit 0;
 

@@ -5,6 +5,8 @@ use Kent::Lexer;
 use Kent::Lexer::Rules;
 use Data::Dumper;
 
+use base 'Kent::Parser::States';
+
 # tidyoff
 sub new {
     my ( $class, %args ) = @_;
@@ -18,58 +20,14 @@ sub new {
 # tidyon
 
 sub parse {
-    my ( $self )   = @_;
-    my $lexer      = $self->{lexer};
-    my $lexrules   = $self->{lexrules};
+    my ($self) = @_;
+    my $lexer  = $self->lexer;
 
-    # my $matched = 0;
-
-    my $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
-
-    while ( 1 ) {
-
-        my $next_token = $lexer->next( $lexrules )
-            or die '$lexer->next returned false. Something is wrong.';
-        $self->push( $next_token );
-
-        say "[$next_token->{line}, $next_token->{column}] $next_token->{name} ($next_token->{next_context})";
-
-        # This is disgusting and wasteful.
-        if ( $next_token->{next_context} eq 'code' ) {
-            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
-        }
-        elsif ( $next_token->{next_context} eq 'comment' ) {
-            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::comment_rules );
-        }
-        elsif ( $next_token->{next_context} eq 'nquote' ) {
-            my $quote_begin = $next_token->{raw};
-            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::nquote_rules( $quote_begin ) );
-        }
-        elsif ( $next_token->{next_context} eq 'iquote' ) {
-            my $quote_begin = $next_token->{raw};
-            $lexrules = Kent::Lexer::Rules::table( Kent::Lexer::Rules::iquote_rules( $quote_begin ) );
-        }
-        elsif ( $next_token->{next_context} eq 'eof' ) { return 1; }
-        elsif ( $next_token->{next_context} eq 'die' ) {
-            die "I don't know why I'm supposed to die";
-        }
-        else {
-            die 'a token defined a next_context I don\'t understand.';
-        }
-
-        # $matched = 0;
-
-        my $phrase = $self->join();    # don't wanna do this a hundred times
-        say $self->join( q{ } );       # Debugging info
-
-    }
+    my $start = $self->lexer->next;
+    return $self->{$start->{name}};
 }
 
-sub apply_rule {
-    my ($self, $rule) = @_;
-
-    return 1;    
-}
+sub lexer { $_[0]->{lexer} }
 
 sub push {
     my ( $self, $thingy ) = @_;

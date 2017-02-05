@@ -22,6 +22,7 @@ sub new {
                  'line'         => $args{line},
                  'column'       => $args{column},
                  'next_context' => $args{next_context} };
+                 'has'          => $args{has} // [];
                  # XXX Does 'next_context' actually need to be stored here?
 
     # Is this a keyword?
@@ -32,6 +33,7 @@ sub new {
     return bless $self, $class;
 }
 
+sub has    { $_[0]->{has}; }
 sub name   { $_[0]->{name}; }
 sub width  { $_[0]->{width}; }
 sub raw    { $_[0]->{raw}; }
@@ -43,7 +45,8 @@ sub TO_JSON {
     return { 'name'   => $self->{name},
              'width'  => $self->{width},
              'line'   => $self->{line},
-             'column' => $self->{column}, };
+             'column' => $self->{column},
+             'has'    => $self->{has} };
 }
 
 1;

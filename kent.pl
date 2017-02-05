@@ -19,7 +19,7 @@ sub script {
     my ( $filename ) = @_;
     my $sourcecode = Kent::Util::slurp( $filename );
 
-    my $parser = Kent::Parser::BruteForce->new( sourcecode => $sourcecode );
+    my $parser = Kent::Parser->new( sourcecode => $sourcecode );
     my $ast = $parser->parse();
 
     say Data::Dumper::Dumper($ast);

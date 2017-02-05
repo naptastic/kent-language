@@ -25,15 +25,20 @@ sub new {
 sub next {
     my ( $self, $rules ) = @_;
 
+    $rules //= Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
+
     foreach my $rule ( @{$rules} ) {
 
-        if ( ref $rule->{regex} eq 'Regexp') {
+        if ( ref $rule->{regex} eq 'Regexp' ) {
             if ( $self->{sourcecode} =~ s/$rule->{regex}// ) { return $self->_make_token( $rule, $1 ); }
-        } else {
-            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) { return $self->_make_token( $rule, $rule->{regex} ) }
         }
-
+        else {
+            if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) {
+                return $self->_make_token( $rule, $rule->{regex} );
+            }
+        }
     }
+
     die "Unrecognized input at line $self->{line} column $self->{column}.";
 }
 
