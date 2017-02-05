@@ -6,7 +6,7 @@ use Kent::Token           ();
 use Kent::Util            ();
 use common::sense;
 
-my @keywords = @Kent::Lexer::Keywords;
+my @keywords     = @Kent::Lexer::Keywords;
 my $file_is_over = 0;
 
 # sourcecode:   a string to tokenize. You should probably load the whole file.
@@ -35,7 +35,9 @@ sub next {
     foreach my $rule ( @{$rules} ) {
 
         if ( ref $rule->{regex} eq 'Regexp' ) {
-            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) { return $self->_make_token( $rule, $1 ); }
+            if ( $self->{sourcecode} =~ s/$rule->{regex}// ) {
+                return $self->_make_token( $rule, $1 );
+            }
         }
         else {
             if ( $self->{sourcecode} =~ s/^\Q$rule->{regex}\E// ) {
@@ -56,7 +58,9 @@ sub _make_token {
                                      column       => $self->{column},
                                      next_context => $rule->{next_context}, );
 
-    if ( grep { $_ eq $raw } @keywords ) { $newtoken->{name} = $raw; }
+    if ( grep { $_ eq $raw } @keywords ) {
+        $newtoken->{name} = $raw;
+    }
 
     if ( $newtoken->name eq 'newline' ) {
 
@@ -74,8 +78,8 @@ sub _make_token {
         $self->{column} += $newtoken->width;
     }
 
-    say [ caller(2) ]->[3];
-    print Kent::Util::dump($newtoken);
+    say [ caller( 2 ) ]->[3];
+    print Kent::Util::dump( $newtoken );
 
     return $newtoken;
 }
