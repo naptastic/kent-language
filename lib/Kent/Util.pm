@@ -17,6 +17,7 @@ sub slurp {
     my $data = <$fh>;
     close $fh;
 
-    return $data;
+    return wantarray ? split( /\n/, $data) : $data;
 }
+
 1;
