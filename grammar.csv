@@ -7,7 +7,6 @@ parenexpr,lparen,expr,rparen,,,,Multi-use,5
 ,,,,,,,,6
 access,dot,*fqid,,,,,Access,7
 access,dot,*lbrace,id,rbrace,,,Access,8
-fqid,*access,,,,,,Access,9
 fqid,access,,,,,,Access,9
 fqid,dot,,,,,,Access,10
 fqid,id,,,,,,Access,11
@@ -23,8 +22,8 @@ array,lbrace,statement,rbrace,,,,Arrays,20
 array,lbrace,element,expr,rbrace,,,Arrays,21
 array,lbrace,element,statement,rbrace,,,Arrays,22
 ,,,,,,,,23
-char,char,char,,,,,Comments,24
-comment,lcmt,char,rcmt,,,,Comments,25
+char,char,*char,,,,,Comments,24
+comment,lcmt,*char,rcmt,,,,Comments,25
 comment,lcmt,rcmt,,,,,Comments,26
 annotated,annotated,comment,,,,,Comments,27
 annotated,comment,annotated,,,,,Comments,28
