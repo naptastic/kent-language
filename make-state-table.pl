@@ -236,7 +236,6 @@ sub print_state_table_module {
         else {
             say "sub $state->{name} {";
             say '    my ($self) = @_;';
-            say '    say $self->join("_");';
             say '    my $lexer  = $self->lexer;';
             say '    my $token = $lexer->next;';
             say '    $self->push($token);';

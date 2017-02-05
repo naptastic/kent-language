@@ -74,7 +74,8 @@ sub _make_token {
         $self->{column} += $newtoken->width;
     }
 
-#    say Kent::Util::dump($newtoken);
+    say [ caller(2) ]->[3];
+    print Kent::Util::dump($newtoken);
 
     return $newtoken;
 }
