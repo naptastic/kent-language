@@ -3,6 +3,7 @@ use common::sense;
 
 use Kent::Lexer::Rules    ();
 use Kent::Lexer::Keywords ();
+use Kent::Util            ();
 
 my $rule_table = Kent::Lexer::Rules::table;
 my @keywords   = @Kent::Lexer::Keywords::keywords;
@@ -21,14 +22,9 @@ sub new {
                  'width'        => length( $args{raw} ), #XXX: This is currently wrong for opening and closing quotes.
                  'line'         => $args{line},
                  'column'       => $args{column},
-                 'next_context' => $args{next_context} };
-                 'has'          => $args{has} // [];
+                 'next_context' => $args{next_context},
+                 'has'          => $args{has} // [] };
                  # XXX Does 'next_context' actually need to be stored here?
-
-    # Is this a keyword?
-    if ( $self->{name} eq 'ID' && grep { $_ eq $self->{raw} } @keywords ) {
-        $self->{name} = "kw_$self->{raw}";
-    }
 
     return bless $self, $class;
 }

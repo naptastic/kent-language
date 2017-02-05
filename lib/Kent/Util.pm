@@ -14,7 +14,7 @@ sub slurp {
     local $/;
 
     open( my $fh, '<', $filename ) or die "Couldn't open $filename for reading: $!";
-    my $data = ( <$fh> );
+    my $data = <$fh>;
     close $fh;
 
     return $data;

@@ -120,7 +120,9 @@ statement,fqid,emparens,,,,,Statements,118
 statement,fqid,parenexpr,,,,,Statements,119
 statement,loop,,,,,,Statements,120
 ,,,,,,,,121
-code,statement,comma,,,,,Structure,122
-file,code,statement,eof,,,,Structure,123
-file,code,eof,,,,,Structure,124
-file,statement,eof,,,,,Structure,125
+function,emparens,array,,,,,Functions,122
+,,,,,,,,123
+code,statement,comma,,,,,Structure,124
+file,bof,code,statement,eof,,,Structure,125
+file,bof,code,eof,,,,Structure,126
+file,bof,statement,eof,,,,Structure,127

@@ -12,7 +12,7 @@ sub new {
     my ( $class, %args ) = @_;
 
     return bless { 'stack'      => [],
-                   'lexer'      => Kent::Lexer->new( \$args{sourcecode} ),
+                   'lexer'      => Kent::Lexer->new( $args{sourcecode} ),
                    'tokens'     => $args{tokens},
                    'end_with'   => $args{end_with},
                    }, $class;
@@ -22,31 +22,32 @@ sub new {
 sub parse {
     my ($self) = @_;
     my $lexer  = $self->lexer;
+    my $token  = $lexer->next;
+    my $name   = $token->name;
 
-    $self->push( $lexer->next );
-    my $name = $self->{stack}[0]{name};
-
-    return $self->$name;
+    $self->push( $token );
+    return $self->Kent::Parser::States::bof;
 }
 
 sub lexer { $_[0]->{lexer} }
 
 sub push {
     my ( $self, $thingy ) = @_;
-    unshift @{ $self->{stack} }, $thingy;
+    push @{ $self->{stack} }, $thingy;
 
     return 1;
 }
 
 sub pop {
     my ( $self ) = @_;
-    return shift @{ $self->{stack} };
+    my $thingy = pop @{ $self->{stack} };
+    return $thingy;
 }
 
 sub join {
     my ( $self, $string ) = @_;
     $string // q{};
-    return join( $string, reverse map { $_->name } @{ $self->{stack} } );
+    return join( $string, map { $_->name } @{ $self->{stack} } );
 }
 
 1;

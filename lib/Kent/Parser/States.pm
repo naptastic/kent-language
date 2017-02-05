@@ -1,36 +1,27 @@
 package Kent::Parser::States;
 
+use strict;
+use warnings;
+use v5.14;
+
 sub access {
     return Kent::Token->new( { 'name' => 'fqid' } );
 }
 
 sub annotated {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'space') { return Kent::Parser::States::annotated_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comment') { return $self->annotated_comment; }
-    if ($token->name eq 'space') { return $self->annotated_space; }
-    if ($token->name eq 'lcmt') { $token = $self->lcmt; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub annotated_comment {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..2) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'annotated',
-          'has'  => \@has, }
-        );
+    if ($token->name eq 'comment') { return Kent::Parser::States::annotated_comment($self); }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub annotated_space {
@@ -38,7 +29,7 @@ sub annotated_space {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -49,19 +40,38 @@ sub annotated_space {
         );
 }
 
+sub annotated_comment {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..2) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'annotated',
+          'has'  => \@has, }
+        );
+}
+
 sub array {
     return Kent::Token->new( { 'name' => 'statement' } );
 }
 
 sub bang {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'fqid') { return $self->bang_fqid; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'fqid') { return Kent::Parser::States::bang_fqid($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub bang_fqid {
@@ -69,7 +79,7 @@ sub bang_fqid {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -80,19 +90,139 @@ sub bang_fqid {
         );
 }
 
+sub bof {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'code') { return Kent::Parser::States::bof_code($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::bof_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub bof_code {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'eof') { return Kent::Parser::States::bof_code_eof($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::bof_code_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub bof_code_eof {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..3) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'file',
+          'has'  => \@has, }
+        );
+}
+
+sub bof_code_statement {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'eof') { return Kent::Parser::States::bof_code_statement_eof($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub bof_code_statement_eof {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..4) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'file',
+          'has'  => \@has, }
+        );
+}
+
+sub bof_statement {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'eof') { return Kent::Parser::States::bof_statement_eof($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub bof_statement_eof {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..3) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'file',
+          'has'  => \@has, }
+        );
+}
+
 sub branch {
     return Kent::Token->new( { 'name' => 'statement' } );
 }
 
 sub char {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'char') { return $self->char_char; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'char') { return Kent::Parser::States::char_char($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub char_char {
@@ -100,7 +230,7 @@ sub char_char {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -111,83 +241,26 @@ sub char_char {
         );
 }
 
-sub code {
-    my ($self) = @_;
-    $token = $self->lexer->next;
-
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
-
-  AGAIN:
-    if ($token->name eq 'eof') { return $self->code_eof; }
-    if ($token->name eq 'statement') { return $self->code_statement; }
-    if ($token->name eq 'annotated') { $token = $self->annotated; goto AGAIN; }
-    if ($token->name eq 'array') { $token = $self->array; goto AGAIN; }
-    if ($token->name eq 'branch') { $token = $self->branch; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'loop') { $token = $self->loop; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub code_eof {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..2) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'file',
-          'has'  => \@has, }
-        );
-}
-
-sub code_statement {
-    my ($self) = @_;
-    $token = $self->lexer->next;
-
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
-
-  AGAIN:
-    if ($token->name eq 'eof') { return $self->code_statement_eof; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub code_statement_eof {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..3) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'file',
-          'has'  => \@has, }
-        );
-}
-
 sub comment {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'annotated') { return $self->comment_annotated; }
-    if ($token->name eq 'statement') { return $self->comment_statement; }
-    if ($token->name eq 'annotated') { $token = $self->annotated; goto AGAIN; }
-    if ($token->name eq 'array') { $token = $self->array; goto AGAIN; }
-    if ($token->name eq 'branch') { $token = $self->branch; goto AGAIN; }
-    if ($token->name eq 'comment') { $token = $self->comment; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'loop') { $token = $self->loop; goto AGAIN; }
-    if ($token->name eq 'statement') { $token = $self->statement; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'annotated') { return Kent::Parser::States::comment_annotated($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::comment_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'comment') { $token = Kent::Parser::States::comment($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub comment_annotated {
@@ -195,7 +268,7 @@ sub comment_annotated {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -211,7 +284,7 @@ sub comment_statement {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -224,15 +297,18 @@ sub comment_statement {
 
 sub dot {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'fqid') { return $self->dot_fqid; }
-    if ($token->name eq 'lbrace') { return $self->dot_lbrace; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'fqid') { return Kent::Parser::States::dot_fqid($self); }
+    if ($token->name eq 'lbrace') { return Kent::Parser::States::dot_lbrace($self); }
+    if ($token->name eq 'space') { return Kent::Parser::States::dot_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'space') { return $self->dot_space; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub dot_fqid {
@@ -240,7 +316,7 @@ sub dot_fqid {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -253,24 +329,30 @@ sub dot_fqid {
 
 sub dot_lbrace {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'id') { return $self->dot_lbrace_id; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'id') { return Kent::Parser::States::dot_lbrace_id($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub dot_lbrace_id {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rbrace') { return $self->dot_lbrace_id_rbrace; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::dot_lbrace_id_rbrace($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub dot_lbrace_id_rbrace {
@@ -278,7 +360,7 @@ sub dot_lbrace_id_rbrace {
 
     my @has;
     foreach (1..4) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -294,7 +376,7 @@ sub dot_space {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -307,36 +389,42 @@ sub dot_space {
 
 sub element {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->element_expr; }
-    if ($token->name eq 'statement') { return $self->element_statement; }
-    if ($token->name eq 'annotated') { $token = $self->annotated; goto AGAIN; }
-    if ($token->name eq 'array') { $token = $self->array; goto AGAIN; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'branch') { $token = $self->branch; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'loop') { $token = $self->loop; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::element_expr($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::element_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub element_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comma') { return $self->element_expr_comma; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'comma') { return Kent::Parser::States::element_expr_comma($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub element_expr_comma {
@@ -344,7 +432,7 @@ sub element_expr_comma {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -357,13 +445,16 @@ sub element_expr_comma {
 
 sub element_statement {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comma') { return $self->element_statement_comma; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'comma') { return Kent::Parser::States::element_statement_comma($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub element_statement_comma {
@@ -371,7 +462,7 @@ sub element_statement_comma {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -384,13 +475,16 @@ sub element_statement_comma {
 
 sub else {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->else_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::else_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub else_codeblock {
@@ -398,7 +492,7 @@ sub else_codeblock {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -411,29 +505,35 @@ sub else_codeblock {
 
 sub elseif {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'cond') { return $self->elseif_cond; }
-    if ($token->name eq 'fqid') { return $self->elseif_fqid; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'cond') { return Kent::Parser::States::elseif_cond($self); }
+    if ($token->name eq 'fqid') { return Kent::Parser::States::elseif_fqid($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseif_cond {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->elseif_cond_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::elseif_cond_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseif_cond_codeblock {
@@ -441,7 +541,7 @@ sub elseif_cond_codeblock {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -454,24 +554,30 @@ sub elseif_cond_codeblock {
 
 sub elseif_fqid {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->elseif_fqid_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::elseif_fqid_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseif_fqid_codeblock {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'hashrocket') { return $self->elseif_fqid_codeblock_hashrocket; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'hashrocket') { return Kent::Parser::States::elseif_fqid_codeblock_hashrocket($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseif_fqid_codeblock_hashrocket {
@@ -479,7 +585,7 @@ sub elseif_fqid_codeblock_hashrocket {
 
     my @has;
     foreach (1..4) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -492,36 +598,45 @@ sub elseif_fqid_codeblock_hashrocket {
 
 sub elseifblock {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'elseif') { return $self->elseifblock_elseif; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'elseif') { return Kent::Parser::States::elseifblock_elseif($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseifblock_elseif {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'cond') { return $self->elseifblock_elseif_cond; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'cond') { return Kent::Parser::States::elseifblock_elseif_cond($self); }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseifblock_elseif_cond {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->elseifblock_elseif_cond_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::elseifblock_elseif_cond_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub elseifblock_elseif_cond_codeblock {
@@ -529,7 +644,7 @@ sub elseifblock_elseif_cond_codeblock {
 
     my @has;
     foreach (1..4) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -548,55 +663,93 @@ sub emcurlies {
     return Kent::Token->new( { 'name' => 'hash' } );
 }
 
-sub expr {
+sub emparens {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'binand') { return $self->expr_binand; }
-    if ($token->name eq 'binor') { return $self->expr_binor; }
-    if ($token->name eq 'binxor') { return $self->expr_binxor; }
-    if ($token->name eq 'comma') { return $self->expr_comma; }
-    if ($token->name eq 'eqeq') { return $self->expr_eqeq; }
-    if ($token->name eq 'fslash') { return $self->expr_fslash; }
-    if ($token->name eq 'gt') { return $self->expr_gt; }
-    if ($token->name eq 'logand') { return $self->expr_logand; }
-    if ($token->name eq 'logor') { return $self->expr_logor; }
-    if ($token->name eq 'logxor') { return $self->expr_logxor; }
-    if ($token->name eq 'lt') { return $self->expr_lt; }
-    if ($token->name eq 'match') { return $self->expr_match; }
-    if ($token->name eq 'minus') { return $self->expr_minus; }
-    if ($token->name eq 'ne') { return $self->expr_ne; }
-    if ($token->name eq 'ngt') { return $self->expr_ngt; }
-    if ($token->name eq 'nlt') { return $self->expr_nlt; }
-    if ($token->name eq 'nomatch') { return $self->expr_nomatch; }
-    if ($token->name eq 'percent') { return $self->expr_percent; }
-    if ($token->name eq 'plus') { return $self->expr_plus; }
-    if ($token->name eq 'shl') { return $self->expr_shl; }
-    if ($token->name eq 'shr') { return $self->expr_shr; }
-    if ($token->name eq 'star') { return $self->expr_star; }
-    if ($token->name eq 'starstar') { return $self->expr_starstar; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::emparens_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub emparens_array {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..2) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'function',
+          'has'  => \@has, }
+        );
+}
+
+sub expr {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'binand') { return Kent::Parser::States::expr_binand($self); }
+    if ($token->name eq 'binor') { return Kent::Parser::States::expr_binor($self); }
+    if ($token->name eq 'binxor') { return Kent::Parser::States::expr_binxor($self); }
+    if ($token->name eq 'comma') { return Kent::Parser::States::expr_comma($self); }
+    if ($token->name eq 'eqeq') { return Kent::Parser::States::expr_eqeq($self); }
+    if ($token->name eq 'fslash') { return Kent::Parser::States::expr_fslash($self); }
+    if ($token->name eq 'gt') { return Kent::Parser::States::expr_gt($self); }
+    if ($token->name eq 'logand') { return Kent::Parser::States::expr_logand($self); }
+    if ($token->name eq 'logor') { return Kent::Parser::States::expr_logor($self); }
+    if ($token->name eq 'logxor') { return Kent::Parser::States::expr_logxor($self); }
+    if ($token->name eq 'lt') { return Kent::Parser::States::expr_lt($self); }
+    if ($token->name eq 'match') { return Kent::Parser::States::expr_match($self); }
+    if ($token->name eq 'minus') { return Kent::Parser::States::expr_minus($self); }
+    if ($token->name eq 'ne') { return Kent::Parser::States::expr_ne($self); }
+    if ($token->name eq 'ngt') { return Kent::Parser::States::expr_ngt($self); }
+    if ($token->name eq 'nlt') { return Kent::Parser::States::expr_nlt($self); }
+    if ($token->name eq 'nomatch') { return Kent::Parser::States::expr_nomatch($self); }
+    if ($token->name eq 'percent') { return Kent::Parser::States::expr_percent($self); }
+    if ($token->name eq 'plus') { return Kent::Parser::States::expr_plus($self); }
+    if ($token->name eq 'shl') { return Kent::Parser::States::expr_shl($self); }
+    if ($token->name eq 'shr') { return Kent::Parser::States::expr_shr($self); }
+    if ($token->name eq 'star') { return Kent::Parser::States::expr_star($self); }
+    if ($token->name eq 'starstar') { return Kent::Parser::States::expr_starstar($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_binand {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_binand_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_binand_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_binand_expr {
@@ -604,7 +757,7 @@ sub expr_binand_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -617,20 +770,23 @@ sub expr_binand_expr {
 
 sub expr_binor {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_binor_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_binor_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_binor_expr {
@@ -638,7 +794,7 @@ sub expr_binor_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -651,20 +807,23 @@ sub expr_binor_expr {
 
 sub expr_binxor {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_binxor_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_binxor_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_binxor_expr {
@@ -672,7 +831,7 @@ sub expr_binxor_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -688,7 +847,7 @@ sub expr_comma {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -701,20 +860,23 @@ sub expr_comma {
 
 sub expr_eqeq {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_eqeq_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_eqeq_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_eqeq_expr {
@@ -722,7 +884,7 @@ sub expr_eqeq_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -735,20 +897,23 @@ sub expr_eqeq_expr {
 
 sub expr_fslash {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_fslash_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_fslash_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_fslash_expr {
@@ -756,7 +921,7 @@ sub expr_fslash_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -769,20 +934,23 @@ sub expr_fslash_expr {
 
 sub expr_gt {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_gt_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_gt_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_gt_expr {
@@ -790,7 +958,7 @@ sub expr_gt_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -803,20 +971,23 @@ sub expr_gt_expr {
 
 sub expr_logand {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_logand_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_logand_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_logand_expr {
@@ -824,7 +995,7 @@ sub expr_logand_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -837,20 +1008,23 @@ sub expr_logand_expr {
 
 sub expr_logor {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_logor_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_logor_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_logor_expr {
@@ -858,7 +1032,7 @@ sub expr_logor_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -871,20 +1045,23 @@ sub expr_logor_expr {
 
 sub expr_logxor {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_logxor_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_logxor_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_logxor_expr {
@@ -892,7 +1069,7 @@ sub expr_logxor_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -905,20 +1082,23 @@ sub expr_logxor_expr {
 
 sub expr_lt {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_lt_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_lt_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_lt_expr {
@@ -926,7 +1106,7 @@ sub expr_lt_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -939,20 +1119,23 @@ sub expr_lt_expr {
 
 sub expr_match {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_match_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_match_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_match_expr {
@@ -960,7 +1143,7 @@ sub expr_match_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -973,20 +1156,23 @@ sub expr_match_expr {
 
 sub expr_minus {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_minus_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_minus_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_minus_expr {
@@ -994,7 +1180,7 @@ sub expr_minus_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1007,20 +1193,23 @@ sub expr_minus_expr {
 
 sub expr_ne {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_ne_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_ne_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_ne_expr {
@@ -1028,7 +1217,7 @@ sub expr_ne_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1041,20 +1230,23 @@ sub expr_ne_expr {
 
 sub expr_ngt {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_ngt_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_ngt_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_ngt_expr {
@@ -1062,7 +1254,7 @@ sub expr_ngt_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1075,20 +1267,23 @@ sub expr_ngt_expr {
 
 sub expr_nlt {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_nlt_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_nlt_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_nlt_expr {
@@ -1096,7 +1291,7 @@ sub expr_nlt_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1109,20 +1304,23 @@ sub expr_nlt_expr {
 
 sub expr_nomatch {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_nomatch_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_nomatch_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_nomatch_expr {
@@ -1130,7 +1328,7 @@ sub expr_nomatch_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1143,20 +1341,23 @@ sub expr_nomatch_expr {
 
 sub expr_percent {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_percent_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_percent_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_percent_expr {
@@ -1164,7 +1365,7 @@ sub expr_percent_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1177,20 +1378,23 @@ sub expr_percent_expr {
 
 sub expr_plus {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_plus_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_plus_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_plus_expr {
@@ -1198,7 +1402,7 @@ sub expr_plus_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1211,20 +1415,23 @@ sub expr_plus_expr {
 
 sub expr_shl {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_shl_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_shl_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_shl_expr {
@@ -1232,7 +1439,7 @@ sub expr_shl_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1245,20 +1452,23 @@ sub expr_shl_expr {
 
 sub expr_shr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_shr_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_shr_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_shr_expr {
@@ -1266,7 +1476,7 @@ sub expr_shr_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1279,20 +1489,23 @@ sub expr_shr_expr {
 
 sub expr_star {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_star_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_star_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_star_expr {
@@ -1300,7 +1513,7 @@ sub expr_star_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1313,20 +1526,23 @@ sub expr_star_expr {
 
 sub expr_starstar {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->expr_starstar_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::expr_starstar_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub expr_starstar_expr {
@@ -1334,7 +1550,7 @@ sub expr_starstar_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1347,30 +1563,36 @@ sub expr_starstar_expr {
 
 sub for {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'fqid') { return $self->for_fqid; }
-    if ($token->name eq 'id') { return $self->for_id; }
-    if ($token->name eq 'range') { return $self->for_range; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    if ($token->name eq 'int') { $token = $self->int; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'fqid') { return Kent::Parser::States::for_fqid($self); }
+    if ($token->name eq 'id') { return Kent::Parser::States::for_id($self); }
+    if ($token->name eq 'range') { return Kent::Parser::States::for_range($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_fqid {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->for_fqid_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::for_fqid_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_fqid_codeblock {
@@ -1378,7 +1600,7 @@ sub for_fqid_codeblock {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1391,42 +1613,51 @@ sub for_fqid_codeblock {
 
 sub for_id {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'in') { return $self->for_id_in; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'in') { return Kent::Parser::States::for_id_in($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_id_in {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'fqid') { return $self->for_id_in_fqid; }
-    if ($token->name eq 'range') { return $self->for_id_in_range; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    if ($token->name eq 'int') { $token = $self->int; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'fqid') { return Kent::Parser::States::for_id_in_fqid($self); }
+    if ($token->name eq 'range') { return Kent::Parser::States::for_id_in_range($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_id_in_fqid {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->for_id_in_fqid_array; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::for_id_in_fqid_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_id_in_fqid_array {
@@ -1434,7 +1665,7 @@ sub for_id_in_fqid_array {
 
     my @has;
     foreach (1..5) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1447,15 +1678,18 @@ sub for_id_in_fqid_array {
 
 sub for_id_in_range {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->for_id_in_range_array; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::for_id_in_range_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_id_in_range_array {
@@ -1463,7 +1697,7 @@ sub for_id_in_range_array {
 
     my @has;
     foreach (1..5) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1476,15 +1710,18 @@ sub for_id_in_range_array {
 
 sub for_range {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->for_range_array; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::for_range_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub for_range_array {
@@ -1492,7 +1729,7 @@ sub for_range_array {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1505,21 +1742,24 @@ sub for_range_array {
 
 sub fqid {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'minusminus') { return $self->fqid_minusminus; }
-    if ($token->name eq 'plusplus') { return $self->fqid_plusplus; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'minusminus') { return Kent::Parser::States::fqid_minusminus($self); }
+    if ($token->name eq 'plusplus') { return Kent::Parser::States::fqid_plusplus($self); }
+    if ($token->name eq 'space') { return Kent::Parser::States::fqid_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'arglist') { return $self->fqid_arglist; }
-    if ($token->name eq 'compose') { return $self->fqid_compose; }
-    if ($token->name eq 'emparens') { return $self->fqid_emparens; }
-    if ($token->name eq 'eq') { return $self->fqid_eq; }
-    if ($token->name eq 'parenexpr') { return $self->fqid_parenexpr; }
-    if ($token->name eq 'space') { return $self->fqid_space; }
-    if ($token->name eq 'lparen') { $token = $self->lparen; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'arglist') { return Kent::Parser::States::fqid_arglist($self); }
+    if ($token->name eq 'compose') { return Kent::Parser::States::fqid_compose($self); }
+    if ($token->name eq 'emparens') { return Kent::Parser::States::fqid_emparens($self); }
+    if ($token->name eq 'eq') { return Kent::Parser::States::fqid_eq($self); }
+    if ($token->name eq 'parenexpr') { return Kent::Parser::States::fqid_parenexpr($self); }
+    if ($token->name eq 'lparen') { $token = Kent::Parser::States::lparen($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub fqid_minusminus {
@@ -1527,7 +1767,7 @@ sub fqid_minusminus {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1543,7 +1783,23 @@ sub fqid_plusplus {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'expr',
+          'has'  => \@has, }
+        );
+}
+
+sub fqid_space {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..2) {
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1559,7 +1815,7 @@ sub fqid_arglist {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1572,30 +1828,34 @@ sub fqid_arglist {
 
 sub fqid_compose {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->fqid_compose_array; }
-    if ($token->name eq 'fqid') { return $self->fqid_compose_fqid; }
-    if ($token->name eq 'function') { return $self->fqid_compose_function; }
-    if ($token->name eq 'hash') { return $self->fqid_compose_hash; }
-    if ($token->name eq 'num') { return $self->fqid_compose_num; }
-    if ($token->name eq 'str') { return $self->fqid_compose_str; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'emcurlies') { $token = $self->emcurlies; goto AGAIN; }
-    if ($token->name eq 'hex') { $token = $self->hex; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    if ($token->name eq 'int') { $token = $self->int; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    if ($token->name eq 'lcurly') { $token = $self->lcurly; goto AGAIN; }
-    if ($token->name eq 'oct') { $token = $self->oct; goto AGAIN; }
-    if ($token->name eq 'rat') { $token = $self->rat; goto AGAIN; }
-    if ($token->name eq 'sci') { $token = $self->sci; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::fqid_compose_array($self); }
+    if ($token->name eq 'fqid') { return Kent::Parser::States::fqid_compose_fqid($self); }
+    if ($token->name eq 'function') { return Kent::Parser::States::fqid_compose_function($self); }
+    if ($token->name eq 'hash') { return Kent::Parser::States::fqid_compose_hash($self); }
+    if ($token->name eq 'num') { return Kent::Parser::States::fqid_compose_num($self); }
+    if ($token->name eq 'str') { return Kent::Parser::States::fqid_compose_str($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'emcurlies') { $token = Kent::Parser::States::emcurlies($self); goto AGAIN; }
+    if ($token->name eq 'emparens') { $token = Kent::Parser::States::emparens($self); goto AGAIN; }
+    if ($token->name eq 'hex') { $token = Kent::Parser::States::hex($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'int') { $token = Kent::Parser::States::int($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    if ($token->name eq 'lcurly') { $token = Kent::Parser::States::lcurly($self); goto AGAIN; }
+    if ($token->name eq 'oct') { $token = Kent::Parser::States::oct($self); goto AGAIN; }
+    if ($token->name eq 'rat') { $token = Kent::Parser::States::rat($self); goto AGAIN; }
+    if ($token->name eq 'sci') { $token = Kent::Parser::States::sci($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub fqid_compose_array {
@@ -1603,7 +1863,7 @@ sub fqid_compose_array {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1619,7 +1879,7 @@ sub fqid_compose_fqid {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1635,7 +1895,7 @@ sub fqid_compose_function {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1651,7 +1911,7 @@ sub fqid_compose_hash {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1667,7 +1927,7 @@ sub fqid_compose_num {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1683,7 +1943,7 @@ sub fqid_compose_str {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1699,7 +1959,7 @@ sub fqid_emparens {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1712,24 +1972,27 @@ sub fqid_emparens {
 
 sub fqid_eq {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->fqid_eq_expr; }
-    if ($token->name eq 'fqid') { return $self->fqid_eq_fqid; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::fqid_eq_expr($self); }
+    if ($token->name eq 'fqid') { return Kent::Parser::States::fqid_eq_fqid($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub fqid_eq_expr {
@@ -1737,7 +2000,7 @@ sub fqid_eq_expr {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1753,7 +2016,7 @@ sub fqid_eq_fqid {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1769,7 +2032,7 @@ sub fqid_parenexpr {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1780,82 +2043,81 @@ sub fqid_parenexpr {
         );
 }
 
-sub fqid_space {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..2) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'expr',
-          'has'  => \@has, }
-        );
-}
-
 sub hashkey {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comma') { return $self->hashkey_comma; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'comma') { return Kent::Parser::States::hashkey_comma($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub hashkey_comma {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'str') { return $self->hashkey_comma_str; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'str') { return Kent::Parser::States::hashkey_comma_str($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub hashkey_comma_str {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'hashrocket') { return $self->hashkey_comma_str_hashrocket; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'hashrocket') { return Kent::Parser::States::hashkey_comma_str_hashrocket($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub hashkey_comma_str_hashrocket {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->hashkey_comma_str_hashrocket_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::hashkey_comma_str_hashrocket_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub hashkey_comma_str_hashrocket_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comma') { return $self->hashkey_comma_str_hashrocket_expr_comma; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'comma') { return Kent::Parser::States::hashkey_comma_str_hashrocket_expr_comma($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub hashkey_comma_str_hashrocket_expr_comma {
@@ -1863,7 +2125,7 @@ sub hashkey_comma_str_hashrocket_expr_comma {
 
     my @has;
     foreach (1..6) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1880,26 +2142,32 @@ sub hex {
 
 sub id {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'dotdot') { return $self->id_dotdot; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'dotdot') { return Kent::Parser::States::id_dotdot($self); }
+    if ($token->name eq 'space') { return Kent::Parser::States::id_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'space') { return $self->id_space; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub id_dotdot {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'id') { return $self->id_dotdot_id; }
-    if ($token->name eq 'int') { return $self->id_dotdot_int; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'id') { return Kent::Parser::States::id_dotdot_id($self); }
+    if ($token->name eq 'int') { return Kent::Parser::States::id_dotdot_int($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub id_dotdot_id {
@@ -1907,7 +2175,7 @@ sub id_dotdot_id {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1923,7 +2191,7 @@ sub id_dotdot_int {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1939,7 +2207,7 @@ sub id_space {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1952,29 +2220,35 @@ sub id_space {
 
 sub if {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'cond') { return $self->if_cond; }
-    if ($token->name eq 'fqid') { return $self->if_fqid; }
-    if ($token->name eq 'access') { $token = $self->access; goto AGAIN; }
-    if ($token->name eq 'dot') { $token = $self->dot; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'id') { $token = $self->id; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'cond') { return Kent::Parser::States::if_cond($self); }
+    if ($token->name eq 'fqid') { return Kent::Parser::States::if_fqid($self); }
+    if ($token->name eq 'access') { $token = Kent::Parser::States::access($self); goto AGAIN; }
+    if ($token->name eq 'dot') { $token = Kent::Parser::States::dot($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'id') { $token = Kent::Parser::States::id($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub if_cond {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->if_cond_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::if_cond_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub if_cond_codeblock {
@@ -1982,7 +2256,7 @@ sub if_cond_codeblock {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -1995,13 +2269,16 @@ sub if_cond_codeblock {
 
 sub if_fqid {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'codeblock') { return $self->if_fqid_codeblock; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'codeblock') { return Kent::Parser::States::if_fqid_codeblock($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub if_fqid_codeblock {
@@ -2009,7 +2286,7 @@ sub if_fqid_codeblock {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2022,18 +2299,37 @@ sub if_fqid_codeblock {
 
 sub ifblock {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'space') { return Kent::Parser::States::ifblock_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'elseblock') { return $self->ifblock_elseblock; }
-    if ($token->name eq 'elseifblock') { return $self->ifblock_elseifblock; }
-    if ($token->name eq 'space') { return $self->ifblock_space; }
-    if ($token->name eq 'else') { $token = $self->else; goto AGAIN; }
-    if ($token->name eq 'elseif') { $token = $self->elseif; goto AGAIN; }
-    if ($token->name eq 'elseifblock') { $token = $self->elseifblock; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'elseblock') { return Kent::Parser::States::ifblock_elseblock($self); }
+    if ($token->name eq 'elseifblock') { return Kent::Parser::States::ifblock_elseifblock($self); }
+    if ($token->name eq 'else') { $token = Kent::Parser::States::else($self); goto AGAIN; }
+    if ($token->name eq 'elseif') { $token = Kent::Parser::States::elseif($self); goto AGAIN; }
+    if ($token->name eq 'elseifblock') { $token = Kent::Parser::States::elseifblock($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub ifblock_space {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..2) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'branch',
+          'has'  => \@has, }
+        );
 }
 
 sub ifblock_elseblock {
@@ -2041,7 +2337,7 @@ sub ifblock_elseblock {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2054,31 +2350,18 @@ sub ifblock_elseblock {
 
 sub ifblock_elseifblock {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'space') { return Kent::Parser::States::ifblock_elseifblock_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'elseblock') { return $self->ifblock_elseifblock_elseblock; }
-    if ($token->name eq 'space') { return $self->ifblock_elseifblock_space; }
-    if ($token->name eq 'else') { $token = $self->else; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub ifblock_elseifblock_elseblock {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..3) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'branch',
-          'has'  => \@has, }
-        );
+    if ($token->name eq 'elseblock') { return Kent::Parser::States::ifblock_elseifblock_elseblock($self); }
+    if ($token->name eq 'else') { $token = Kent::Parser::States::else($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub ifblock_elseifblock_space {
@@ -2086,7 +2369,7 @@ sub ifblock_elseifblock_space {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2097,12 +2380,12 @@ sub ifblock_elseifblock_space {
         );
 }
 
-sub ifblock_space {
+sub ifblock_elseifblock_elseblock {
     my ($self) = @_;
 
     my @has;
-    foreach (1..2) {
-        my $thing = $self->shift;
+    foreach (1..3) {
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2115,26 +2398,32 @@ sub ifblock_space {
 
 sub int {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'dotdot') { return $self->int_dotdot; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'dotdot') { return Kent::Parser::States::int_dotdot($self); }
+    if ($token->name eq 'space') { return Kent::Parser::States::int_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'space') { return $self->int_space; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub int_dotdot {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'id') { return $self->int_dotdot_id; }
-    if ($token->name eq 'int') { return $self->int_dotdot_int; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'id') { return Kent::Parser::States::int_dotdot_id($self); }
+    if ($token->name eq 'int') { return Kent::Parser::States::int_dotdot_int($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub int_dotdot_id {
@@ -2142,7 +2431,7 @@ sub int_dotdot_id {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2158,7 +2447,7 @@ sub int_dotdot_int {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2174,7 +2463,7 @@ sub int_space {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2187,64 +2476,73 @@ sub int_space {
 
 sub lbrace {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'element') { return $self->lbrace_element; }
-    if ($token->name eq 'expr') { return $self->lbrace_expr; }
-    if ($token->name eq 'rbrace') { return $self->lbrace_rbrace; }
-    if ($token->name eq 'statement') { return $self->lbrace_statement; }
-    if ($token->name eq 'annotated') { $token = $self->annotated; goto AGAIN; }
-    if ($token->name eq 'array') { $token = $self->array; goto AGAIN; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'branch') { $token = $self->branch; goto AGAIN; }
-    if ($token->name eq 'element') { $token = $self->element; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'loop') { $token = $self->loop; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    if ($token->name eq 'statement') { $token = $self->statement; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'element') { return Kent::Parser::States::lbrace_element($self); }
+    if ($token->name eq 'expr') { return Kent::Parser::States::lbrace_expr($self); }
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_rbrace($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::lbrace_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'element') { $token = Kent::Parser::States::element($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    if ($token->name eq 'statement') { $token = Kent::Parser::States::statement($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_element {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->lbrace_element_expr; }
-    if ($token->name eq 'rbrace') { return $self->lbrace_element_rbrace; }
-    if ($token->name eq 'statement') { return $self->lbrace_element_statement; }
-    if ($token->name eq 'annotated') { $token = $self->annotated; goto AGAIN; }
-    if ($token->name eq 'array') { $token = $self->array; goto AGAIN; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'branch') { $token = $self->branch; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'loop') { $token = $self->loop; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::lbrace_element_expr($self); }
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_element_rbrace($self); }
+    if ($token->name eq 'statement') { return Kent::Parser::States::lbrace_element_statement($self); }
+    if ($token->name eq 'annotated') { $token = Kent::Parser::States::annotated($self); goto AGAIN; }
+    if ($token->name eq 'array') { $token = Kent::Parser::States::array($self); goto AGAIN; }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'branch') { $token = Kent::Parser::States::branch($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'loop') { $token = Kent::Parser::States::loop($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_element_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rbrace') { return $self->lbrace_element_expr_rbrace; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_element_expr_rbrace($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_element_expr_rbrace {
@@ -2252,7 +2550,7 @@ sub lbrace_element_expr_rbrace {
 
     my @has;
     foreach (1..4) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2268,7 +2566,7 @@ sub lbrace_element_rbrace {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2281,13 +2579,16 @@ sub lbrace_element_rbrace {
 
 sub lbrace_element_statement {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rbrace') { return $self->lbrace_element_statement_rbrace; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_element_statement_rbrace($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_element_statement_rbrace {
@@ -2295,7 +2596,7 @@ sub lbrace_element_statement_rbrace {
 
     my @has;
     foreach (1..4) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2308,13 +2609,16 @@ sub lbrace_element_statement_rbrace {
 
 sub lbrace_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rbrace') { return $self->lbrace_expr_rbrace; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_expr_rbrace($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_expr_rbrace {
@@ -2322,7 +2626,7 @@ sub lbrace_expr_rbrace {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2338,7 +2642,7 @@ sub lbrace_rbrace {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2351,13 +2655,16 @@ sub lbrace_rbrace {
 
 sub lbrace_statement {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rbrace') { return $self->lbrace_statement_rbrace; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rbrace') { return Kent::Parser::States::lbrace_statement_rbrace($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lbrace_statement_rbrace {
@@ -2365,7 +2672,7 @@ sub lbrace_statement_rbrace {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2378,25 +2685,31 @@ sub lbrace_statement_rbrace {
 
 sub lcmt {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'char') { return $self->lcmt_char; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'char') { return Kent::Parser::States::lcmt_char($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rcmt') { return $self->lcmt_rcmt; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rcmt') { return Kent::Parser::States::lcmt_rcmt($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcmt_char {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rcmt') { return $self->lcmt_char_rcmt; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rcmt') { return Kent::Parser::States::lcmt_char_rcmt($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcmt_char_rcmt {
@@ -2404,7 +2717,7 @@ sub lcmt_char_rcmt {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2420,7 +2733,7 @@ sub lcmt_rcmt {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2433,29 +2746,35 @@ sub lcmt_rcmt {
 
 sub lcurly {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'hashkey') { return $self->lcurly_hashkey; }
-    if ($token->name eq 'rcurly') { return $self->lcurly_rcurly; }
-    if ($token->name eq 'str') { return $self->lcurly_str; }
-    if ($token->name eq 'hashkey') { $token = $self->hashkey; goto AGAIN; }
-    if ($token->name eq 'str') { $token = $self->str; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'hashkey') { return Kent::Parser::States::lcurly_hashkey($self); }
+    if ($token->name eq 'rcurly') { return Kent::Parser::States::lcurly_rcurly($self); }
+    if ($token->name eq 'str') { return Kent::Parser::States::lcurly_str($self); }
+    if ($token->name eq 'hashkey') { $token = Kent::Parser::States::hashkey($self); goto AGAIN; }
+    if ($token->name eq 'str') { $token = Kent::Parser::States::str($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_hashkey {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rcurly') { return $self->lcurly_hashkey_rcurly; }
-    if ($token->name eq 'str') { return $self->lcurly_hashkey_str; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rcurly') { return Kent::Parser::States::lcurly_hashkey_rcurly($self); }
+    if ($token->name eq 'str') { return Kent::Parser::States::lcurly_hashkey_str($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_hashkey_rcurly {
@@ -2463,7 +2782,7 @@ sub lcurly_hashkey_rcurly {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2476,42 +2795,51 @@ sub lcurly_hashkey_rcurly {
 
 sub lcurly_hashkey_str {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'hashrocket') { return $self->lcurly_hashkey_str_hashrocket; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'hashrocket') { return Kent::Parser::States::lcurly_hashkey_str_hashrocket($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_hashkey_str_hashrocket {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->lcurly_hashkey_str_hashrocket_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::lcurly_hashkey_str_hashrocket_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_hashkey_str_hashrocket_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rcurly') { return $self->lcurly_hashkey_str_hashrocket_expr_rcurly; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rcurly') { return Kent::Parser::States::lcurly_hashkey_str_hashrocket_expr_rcurly($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_hashkey_str_hashrocket_expr_rcurly {
@@ -2519,7 +2847,7 @@ sub lcurly_hashkey_str_hashrocket_expr_rcurly {
 
     my @has;
     foreach (1..6) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2535,7 +2863,7 @@ sub lcurly_rcurly {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2548,42 +2876,51 @@ sub lcurly_rcurly {
 
 sub lcurly_str {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'hashrocket') { return $self->lcurly_str_hashrocket; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'hashrocket') { return Kent::Parser::States::lcurly_str_hashrocket($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_str_hashrocket {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->lcurly_str_hashrocket_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::lcurly_str_hashrocket_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_str_hashrocket_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rcurly') { return $self->lcurly_str_hashrocket_expr_rcurly; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rcurly') { return Kent::Parser::States::lcurly_str_hashrocket_expr_rcurly($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lcurly_str_hashrocket_expr_rcurly {
@@ -2591,7 +2928,7 @@ sub lcurly_str_hashrocket_expr_rcurly {
 
     my @has;
     foreach (1..5) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2612,32 +2949,38 @@ sub loop {
 
 sub lparen {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->lparen_expr; }
-    if ($token->name eq 'rparen') { return $self->lparen_rparen; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::lparen_expr($self); }
+    if ($token->name eq 'rparen') { return Kent::Parser::States::lparen_rparen($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lparen_expr {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'rparen') { return $self->lparen_expr_rparen; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'rparen') { return Kent::Parser::States::lparen_expr_rparen($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub lparen_expr_rparen {
@@ -2645,7 +2988,7 @@ sub lparen_expr_rparen {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2661,7 +3004,7 @@ sub lparen_rparen {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2674,13 +3017,16 @@ sub lparen_rparen {
 
 sub minus {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'fqid') { return $self->minus_fqid; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'fqid') { return Kent::Parser::States::minus_fqid($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub minus_fqid {
@@ -2688,7 +3034,7 @@ sub minus_fqid {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2701,13 +3047,16 @@ sub minus_fqid {
 
 sub minusminus {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'fqid') { return $self->minusminus_fqid; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'fqid') { return Kent::Parser::States::minusminus_fqid($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub minusminus_fqid {
@@ -2715,7 +3064,7 @@ sub minusminus_fqid {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2736,13 +3085,16 @@ sub oct {
 
 sub plusplus {
     my ($self) = @_;
-    $token = $self->lexer->next;
-    if ($token->name eq 'fqid') { return $self->plusplus_fqid; }
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'fqid') { return Kent::Parser::States::plusplus_fqid($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub plusplus_fqid {
@@ -2750,7 +3102,7 @@ sub plusplus_fqid {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2775,16 +3127,18 @@ sub sci {
 
 sub statement {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'comma') { return $self->statement_comma; }
-    if ($token->name eq 'comment') { return $self->statement_comment; }
-    if ($token->name eq 'eof') { return $self->statement_eof; }
-    if ($token->name eq 'lcmt') { $token = $self->lcmt; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'comma') { return Kent::Parser::States::statement_comma($self); }
+    if ($token->name eq 'comment') { return Kent::Parser::States::statement_comment($self); }
+    if ($token->name eq 'lcmt') { $token = Kent::Parser::States::lcmt($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub statement_comma {
@@ -2792,7 +3146,7 @@ sub statement_comma {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2808,7 +3162,7 @@ sub statement_comment {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2819,77 +3173,19 @@ sub statement_comment {
         );
 }
 
-sub statement_eof {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..2) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'file',
-          'has'  => \@has, }
-        );
-}
-
 sub str {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+    if ($token->name eq 'space') { return Kent::Parser::States::str_space($self); }
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
-
-  AGAIN:
-    if ($token->name eq 'hashrocket') { return $self->str_hashrocket; }
-    if ($token->name eq 'space') { return $self->str_space; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub str_hashrocket {
-    my ($self) = @_;
-    $token = $self->lexer->next;
-
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'expr') { return $self->str_hashrocket_expr; }
-    if ($token->name eq 'bang') { $token = $self->bang; goto AGAIN; }
-    if ($token->name eq 'expr') { $token = $self->expr; goto AGAIN; }
-    if ($token->name eq 'fqid') { $token = $self->fqid; goto AGAIN; }
-    if ($token->name eq 'literal') { $token = $self->literal; goto AGAIN; }
-    if ($token->name eq 'minus') { $token = $self->minus; goto AGAIN; }
-    if ($token->name eq 'minusminus') { $token = $self->minusminus; goto AGAIN; }
-    if ($token->name eq 'plusplus') { $token = $self->plusplus; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub str_hashrocket_expr {
-    my ($self) = @_;
-    $token = $self->lexer->next;
-
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
-
-  AGAIN:
-    if ($token->name eq 'comma') { return $self->str_hashrocket_expr_comma; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
-}
-
-sub str_hashrocket_expr_comma {
-    my ($self) = @_;
-
-    my @has;
-    foreach (1..4) {
-        my $thing = $self->shift;
-        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
-        else { push @has, $thing; }
-    }
-
-    return Kent::Token->new(
-        { 'name' => 'hashkey',
-          'has'  => \@has, }
-        );
+    if ($token->name eq 'hashrocket') { return Kent::Parser::States::str_hashrocket($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub str_space {
@@ -2897,7 +3193,7 @@ sub str_space {
 
     my @has;
     foreach (1..2) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2908,28 +3204,85 @@ sub str_space {
         );
 }
 
-sub until {
+sub str_hashrocket {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'condition') { return $self->until_condition; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'expr') { return Kent::Parser::States::str_hashrocket_expr($self); }
+    if ($token->name eq 'bang') { $token = Kent::Parser::States::bang($self); goto AGAIN; }
+    if ($token->name eq 'expr') { $token = Kent::Parser::States::expr($self); goto AGAIN; }
+    if ($token->name eq 'fqid') { $token = Kent::Parser::States::fqid($self); goto AGAIN; }
+    if ($token->name eq 'literal') { $token = Kent::Parser::States::literal($self); goto AGAIN; }
+    if ($token->name eq 'minus') { $token = Kent::Parser::States::minus($self); goto AGAIN; }
+    if ($token->name eq 'minusminus') { $token = Kent::Parser::States::minusminus($self); goto AGAIN; }
+    if ($token->name eq 'plusplus') { $token = Kent::Parser::States::plusplus($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub str_hashrocket_expr {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'comma') { return Kent::Parser::States::str_hashrocket_expr_comma($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+}
+
+sub str_hashrocket_expr_comma {
+    my ($self) = @_;
+
+    my @has;
+    foreach (1..4) {
+        my $thing = $self->pop;
+        if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
+        else { push @has, $thing; }
+    }
+
+    return Kent::Token->new(
+        { 'name' => 'hashkey',
+          'has'  => \@has, }
+        );
+}
+
+sub until {
+    my ($self) = @_;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
+
+  AGAIN:
+    if ($token->name eq 'condition') { return Kent::Parser::States::until_condition($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub until_condition {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->until_condition_array; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::until_condition_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub until_condition_array {
@@ -2937,7 +3290,7 @@ sub until_condition_array {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }
@@ -2950,26 +3303,32 @@ sub until_condition_array {
 
 sub while {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'condition') { return $self->while_condition; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'condition') { return Kent::Parser::States::while_condition($self); }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub while_condition {
     my ($self) = @_;
-    $token = $self->lexer->next;
+    say $self->join("_");
+    my $lexer  = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
 
-    while ($token->name eq 'space') { $token = $self->lexer->next; }
+    while ($token->name eq 'space') { $self->pop; $token = $lexer->next; }
 
   AGAIN:
-    if ($token->name eq 'array') { return $self->while_condition_array; }
-    if ($token->name eq 'embraces') { $token = $self->embraces; goto AGAIN; }
-    if ($token->name eq 'lbrace') { $token = $self->lbrace; goto AGAIN; }
-    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";
+    if ($token->name eq 'array') { return Kent::Parser::States::while_condition_array($self); }
+    if ($token->name eq 'embraces') { $token = Kent::Parser::States::embraces($self); goto AGAIN; }
+    if ($token->name eq 'lbrace') { $token = Kent::Parser::States::lbrace($self); goto AGAIN; }
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
 }
 
 sub while_condition_array {
@@ -2977,7 +3336,7 @@ sub while_condition_array {
 
     my @has;
     foreach (1..3) {
-        my $thing = $self->shift;
+        my $thing = $self->pop;
         if ( scalar @{ $thing->{has} } == 1 ) { push @has, $thing->{has}[0]; }
         else { push @has, $thing; }
     }

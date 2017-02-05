@@ -7,6 +7,7 @@ use Kent::Util            ();
 use common::sense;
 
 my @keywords = @Kent::Lexer::Keywords;
+my $file_is_over = 0;
 
 # sourcecode:   a string to tokenize. You should probably load the whole file.
 # context:      the name of the set of rules for the lexer to use.
@@ -26,6 +27,8 @@ sub new {
 
 sub next {
     my ( $self, $rules ) = @_;
+
+    die 'Tried to read past end of file' if $file_is_over;
 
     $rules //= Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
 
@@ -64,9 +67,14 @@ sub _make_token {
         $self->{line}++;
         $self->{column} = 1;
     }
+    elsif ( $newtoken->name eq 'eof' ) {
+        $file_is_over = 1;
+    }
     else {
         $self->{column} += $newtoken->width;
     }
+
+#    say Kent::Util::dump($newtoken);
 
     return $newtoken;
 }

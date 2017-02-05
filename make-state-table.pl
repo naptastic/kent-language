@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
-use common::sense;
+use strict;
+use warnings;
+use v5.14;
 
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
@@ -13,7 +15,6 @@ my $debug            = 0;
 my $printer = JSON->new->canonical( 1 )->pretty( 1 );
 
 my $lines   = [];
-my $choices = {};
 
 open( my $fh, '<', $grammar_filename ) or die "Couldn't open $grammar_filename for reading: $!";
 @{$lines} = <$fh>;
@@ -73,8 +74,8 @@ sub choices_from_rules {
             my $part = shift @parts;
 
             if ( scalar @parts == 0 ) {
-                if   ( ref $ref->{$part} eq 'HASH' ) { $ref->{$part}{'space'} = $token_name; }
-                else                                 { $ref->{$part}          = $token_name; }
+                if   ( ref $ref->{$part} eq 'HASH' ) { $ref->{$part}{'*space'} = $token_name; }
+                else                                 { $ref->{$part}           = $token_name; }
                 last;
             }
             else {
@@ -84,7 +85,7 @@ sub choices_from_rules {
                 }
                 else {
                     my $holder = $ref->{$part};
-                    $ref->{$part} = { 'space' => $holder };
+                    $ref->{$part} = { '*space' => $holder };
                     $ref = $ref->{$part};
                 }
             }
@@ -110,7 +111,7 @@ sub states_from_choices {
             # "others" are checked last. Their return replaces the token being
             #     evaluated, and we go back to checking "nexts". They
             #     will call their own name, as if starting from scratch.
-            my ( @nows, @nexts, @laters );
+            my ( @nows, @nexts );
             foreach my $choice ( sort keys %{ $choices->{$key} } ) {
                 next if ref $choice eq 'HASH';
                 if   ( $choice =~ m/[*]/ ) { push @nows,  $choice; }
@@ -194,8 +195,12 @@ sub print_state_table_module {
 
     say "package Kent::Parser::States;";
     say '';
+    say 'use strict;';
+    say 'use warnings;';
+    say 'use v5.14;';
+    say '';
 
-    foreach my $state ( sort { $_->{name} } @{ $states } ) {
+    foreach my $state ( @{ $states } ) {
         if ( $state->{returns} ) {
             if ( $state->{depth} > 1 ) {
                 say "sub $state->{name} {";
@@ -203,7 +208,7 @@ sub print_state_table_module {
                 say '';
                 say '    my @has;';
                 say "    foreach (1..$state->{depth}) {";
-                say "        my \$thing = \$self->shift;";
+                say "        my \$thing = \$self->pop;";
                 say "        if ( scalar \@{ \$thing->{has} } == 1 ) { push \@has, \$thing->{has}[0]; }";
                 say "        else { push \@has, \$thing; }";
                 say '    }';
@@ -225,20 +230,22 @@ sub print_state_table_module {
         else {
             say "sub $state->{name} {";
             say '    my ($self) = @_;';
+            say '    say $self->join("_");';
             say '    my $lexer  = $self->lexer;';
-            say '    $token = $lexer->next;';
+            say '    my $token = $lexer->next;';
+            say '    $self->push($token);';
             foreach my $now ( @{ $state->{nows} } ) {
-                say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
+                say "    if (\$token->name eq '$now') { return Kent::Parser::States::$state->{name}_$now(\$self); }";
             }
             say '';
-            say '    while ($token->name eq \'space\') { $token = $lexer->next; }';
+            say '    while ($token->name eq \'space\') { $self->pop; $token = $lexer->next; }';
             say '';
             say '  AGAIN:';
             foreach my $next ( @{ $state->{nexts} } ) {
-                say "    if (\$token->name eq '$next') { return \$self->$state->{name}_$next; }";
+                say "    if (\$token->name eq '$next') { return Kent::Parser::States::$state->{name}_$next(\$self); }";
             }
             foreach my $other ( @{ $state->{others} } ) {
-                say "    if (\$token->name eq '$other') { \$token = \$self->$other; goto AGAIN; }";
+                say "    if (\$token->name eq '$other') { \$token = Kent::Parser::States::$other(\$self); goto AGAIN; }";
             }
             say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
             say '}';

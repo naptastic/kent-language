@@ -75,6 +75,7 @@ sub code_rules {
     [ '|',                          'binor',         'code',    ],
     [ '&',                          'binand',        'code',    ],
     [ '^',                          'binxor',        'code',    ],
+    [ '<-',                         'compose',       'code',    ],
     [ '<<',                         'shl',           'code',    ],
     [ '>>',                         'shr',           'code',    ],
     [ '<',                          'lt',            'code',    ],
