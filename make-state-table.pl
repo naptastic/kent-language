@@ -26,21 +26,9 @@ my $rules   = rules_from_lines( $lines );
 my $choices = choices_from_rules( $rules );
 my $states  = states_from_choices( $choices );
 
-print Dumper( $choices ) if $debug;
+summarize_rules($rules);
 
-foreach my $state ( @{$states} ) {
-    say "$state->{name}";
-    if ( $state->{returns} ) {
-        say "    return: $state->{returns} with $state->{depth} parts";
-        say;
-    }
-    else {
-        say "    nows:   $_" foreach @{ $state->{nows} };
-        say "    nexts:  $_" foreach @{ $state->{nexts} };
-        say "    others: $_" foreach @{ $state->{others} };
-        say;
-    }
-}
+exit 0;
 
 sub rules_from_lines {
     my ( $lines ) = @_;
@@ -52,7 +40,7 @@ sub rules_from_lines {
         $rule->{token_name} = $parts[0];
         $rule->{parts}      = [ grep { $_ ne '' } @parts[ 1 .. 6 ] ];
         $rule->{category}   = $parts[7];
-        $rule->{sort_order} = $parts[8];
+        $rule->{sort_order} = $parts[8] + 0; # Remove newline and cast to IV
         push @{$rules}, $rule;
     }
     return $rules;
@@ -133,6 +121,7 @@ sub states_from_choices {
                 { name   => "$name_so_far$key",
                   nows   => \@nows,
                   nexts  => \@nexts,
+                  depth  => $depth,
                   others => find_valid_nexts( $choices->{$key} ),
                 };
             push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
@@ -160,4 +149,99 @@ sub find_valid_nexts {
     }
 
     return [ sort keys %valid_nexts ];
+}
+
+sub summarize_rules {
+    my ($rules) = @_;
+
+    my $last_token_name;
+
+    foreach my $rule ( sort { $a->{sort_order} <=> $b->{sort_order} } @{ $rules } ) {
+        next unless scalar @{ $rule->{parts} };
+        if ( $rule->{token_name} ne $last_token_name ) {
+            say "$rule->{token_name}";
+            $last_token_name = $rule->{token_name};
+        }
+        say "      [ " . join( ' ', @{ $rule->{parts} } ) . " ]";
+    }
+}
+
+sub summarize_choices {
+    say $printer->encode( shift );
+}
+
+sub summarize_states {
+    my ( $states ) = @_;
+    foreach my $state ( grep { $_->{name} =~ m/(num|int)/ } @{$states} ) {
+        say "$state->{name}";
+        if ( $state->{returns} ) {
+            say "    return: $state->{returns} with $state->{depth} parts";
+            say;
+        }
+        else {
+            say "    nows:   $_" foreach @{ $state->{nows} };
+            say "    nexts:  $_" foreach @{ $state->{nexts} };
+            say "    others: $_" foreach @{ $state->{others} };
+            say;
+        }
+    }
+    return 1;
+}
+
+sub print_state_table_module {
+    my ($states) = @_;
+
+    say "package Kent::Parser::States;";
+    say '';
+
+    foreach my $state ( sort { $_->{name} } @{ $states } ) {
+        if ( $state->{returns} ) {
+            if ( $state->{depth} > 1 ) {
+                say "sub $state->{name} {";
+                say '    my ($self) = @_;';
+                say '';
+                say '    my @has;';
+                say "    foreach (1..$state->{depth}) {";
+                say "        my \$thing = \$self->shift;";
+                say "        if ( scalar \@{ \$thing->{has} } == 1 ) { push \@has, \$thing->{has}[0]; }";
+                say "        else { push \@has, \$thing; }";
+                say '    }';
+                say '';
+                say "    return Kent::Token->new(";
+                say "        { 'name' => '$state->{returns}',";
+                say "          'has'  => \\\@has, }";
+                say "        );";
+                say "}";
+                say '';
+            }
+            else {
+                say "sub $state->{name} {";
+                say "    return Kent::Token->new( { 'name' => '$state->{returns}' } );";
+                say "}";
+                say '';
+            }
+        }
+        else {
+            say "sub $state->{name} { ";
+            say '    my ($self) = @_;';
+            say '    $token = $self->lexer->next;';
+            foreach my $now ( @{ $state->{nows} } ) {
+                say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
+            }
+            say '';
+            say '    while ($token->name eq \'space\') { $token = $self->lexer->next; }';
+            say '';
+            say '  AGAIN:';
+            foreach my $next ( @{ $state->{nexts} } ) {
+                say "    if (\$token->name eq '$next') { return \$self->$state->{name}_$next; }";
+            }
+            foreach my $other ( @{ $state->{others} } ) {
+                say "    if (\$token->name eq '$other') { \$token = \$self->$other; goto AGAIN; }";
+            }
+            say '    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";';
+            say '}';
+            say '';
+        }
+    }
+    return 1;
 }
