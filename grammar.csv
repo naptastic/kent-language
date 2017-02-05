@@ -36,7 +36,7 @@ cond,expr,lt,expr,,,,Conditionals,34
 cond,expr,match,expr,,,,Conditionals,35
 cond,expr,ne,expr,,,,Conditionals,36
 cond,expr,ngt,expr,,,,Conditionals,37
-cond,expr,nle,expr,,,,Conditionals,38
+cond,expr,nlt,expr,,,,Conditionals,38
 cond,expr,nomatch,expr,,,,Conditionals,39
 ,,,,,,,,40
 expr,bang,*fqid,,,,,Expressions,41

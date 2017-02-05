@@ -51,7 +51,12 @@ sub _make_token {
                                      column       => $self->{column},
                                      next_context => $rule->{next_context}, );
 
-    if ( $newtoken->name eq 's_NEWLINE' ) {
+    if ( $newtoken->name eq 'newline' ) {
+
+        # It doesn't matter to combine multiple 'space' tokens since states
+        # that discard whitespace will continue throwing away tokens until
+        # they find something that isn't some kind of 'space'.
+        $newtoken->{name} = 'space';
         $self->{line}++;
         $self->{column} = 1;
     }

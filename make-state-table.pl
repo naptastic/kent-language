@@ -223,7 +223,7 @@ sub print_state_table_module {
             }
         }
         else {
-            say "sub $state->{name} { ";
+            say "sub $state->{name} {";
             say '    my ($self) = @_;';
             say '    $token = $self->lexer->next;';
             foreach my $now ( @{ $state->{nows} } ) {
@@ -244,5 +244,6 @@ sub print_state_table_module {
             say '';
         }
     }
+    say "\n1;";
     return 1;
 }
