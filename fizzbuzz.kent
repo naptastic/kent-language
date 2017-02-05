@@ -1,9 +1,9 @@
 fizzbuzz <- () [
     words <- [],
-    for (1..100) [
-        if (. % 15 == 0) [words.push ("fizzbuzz"), next],
-        if (. % 5 == 0)  [words.push ("buzz"),     next],
-        if (. % 3 == 0)  [words.push ("fizz"),     next],
+    for 1..100 [
+        if . % 15 == 0 [ words.push (fizzbuzz), next ],
+        if . % 5 == 0  [ words.push (buzz),     next ],
+        if . % 3 == 0  [ words.push (fizz),     next ],
     ],
     return words,
 ]
