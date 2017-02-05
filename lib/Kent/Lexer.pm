@@ -6,6 +6,8 @@ use Kent::Token           ();
 use Kent::Util            ();
 use common::sense;
 
+my @keywords = @Kent::Lexer::Keywords;
+
 # sourcecode:   a string to tokenize. You should probably load the whole file.
 # context:      the name of the set of rules for the lexer to use.
 # ending_token: When this token is found, ... aw, shit.
@@ -50,6 +52,8 @@ sub _make_token {
                                      line         => $self->{line},
                                      column       => $self->{column},
                                      next_context => $rule->{next_context}, );
+
+    if ( grep { $_ eq $raw } @keywords ) { $newtoken->{name} = $raw; }
 
     if ( $newtoken->name eq 'newline' ) {
 

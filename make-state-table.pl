@@ -225,12 +225,13 @@ sub print_state_table_module {
         else {
             say "sub $state->{name} {";
             say '    my ($self) = @_;';
-            say '    $token = $self->lexer->next;';
+            say '    my $lexer  = $self->lexer;';
+            say '    $token = $lexer->next;';
             foreach my $now ( @{ $state->{nows} } ) {
                 say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
             }
             say '';
-            say '    while ($token->name eq \'space\') { $token = $self->lexer->next; }';
+            say '    while ($token->name eq \'space\') { $token = $lexer->next; }';
             say '';
             say '  AGAIN:';
             foreach my $next ( @{ $state->{nexts} } ) {
@@ -239,7 +240,7 @@ sub print_state_table_module {
             foreach my $other ( @{ $state->{others} } ) {
                 say "    if (\$token->name eq '$other') { \$token = \$self->$other; goto AGAIN; }";
             }
-            say '    die "Unexpected $token->name at line $self->lexer->line, column $self->lexer->column";';
+            say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
             say '}';
             say '';
         }

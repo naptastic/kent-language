@@ -23,8 +23,10 @@ sub parse {
     my ($self) = @_;
     my $lexer  = $self->lexer;
 
-    my $start = $self->lexer->next;
-    return $self->{$start->{name}};
+    $self->push( $lexer->next );
+    my $name = $self->{stack}[0]{name};
+
+    return $self->$name;
 }
 
 sub lexer { $_[0]->{lexer} }
