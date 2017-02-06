@@ -6,7 +6,6 @@ use v5.14;
 
 sub access {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'fqid',
         'has'  => [],
@@ -16,10 +15,8 @@ sub access {
 
 sub annotated {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
-    if ($token->name eq 'space') { return $self->annotated_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -30,25 +27,7 @@ sub annotated {
   AGAIN:
     if ($token->name eq 'comment') { return $self->annotated_comment; }
     if ($token->name eq 'lcmt') { $self->lcmt; $token = $self->top; goto AGAIN; }
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
-}
-
-sub annotated_space {
-    my ($self) = @_;
-
-    my $has = [];
-    foreach (1..2) {
-        my $thing = $self->pop;
-        next if ref $thing->{has} ne 'ARRAY';
-        if ( scalar @{ $thing->{has} } == 1 ) { push @{ $has }, $thing->{has}[0]; }
-        else { push @{$has}, $thing; }
-    }
-
-    $self->push( Kent::Token->new(
-        'name' => 'statement',
-        'has'  => $has,
-        ) );
-    return 1;
+   return $self->annotated_default;
 }
 
 sub annotated_comment {
@@ -69,9 +48,26 @@ sub annotated_comment {
     return 1;
 }
 
+sub annotated_default {
+    my ($self) = @_;
+
+    my $has = [];
+    foreach (1..2) {
+        my $thing = $self->pop;
+        next if ref $thing->{has} ne 'ARRAY';
+        if ( scalar @{ $thing->{has} } == 1 ) { push @{ $has }, $thing->{has}[0]; }
+        else { push @{$has}, $thing; }
+    }
+
+    $self->push( Kent::Token->new(
+        'name' => 'statement',
+        'has'  => $has,
+        ) );
+    return 1;
+}
+
 sub array {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'statement',
         'has'  => [],
@@ -81,7 +77,6 @@ sub array {
 
 sub bang {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'fqid') { return $self->bang_fqid; }
@@ -116,7 +111,6 @@ sub bang_fqid {
 
 sub bof {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -153,7 +147,6 @@ sub bof {
 
 sub bof_code {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -207,7 +200,6 @@ sub bof_code_eof {
 
 sub bof_code_statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -242,7 +234,6 @@ sub bof_code_statement_eof {
 
 sub bof_statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -296,7 +287,6 @@ sub bof_statement_eof {
 
 sub branch {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'statement',
         'has'  => [],
@@ -306,7 +296,6 @@ sub branch {
 
 sub char {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'char') { return $self->char_char; }
@@ -341,7 +330,6 @@ sub char_char {
 
 sub comment {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -413,12 +401,10 @@ sub comment_statement {
 
 sub dot {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'fqid') { return $self->dot_fqid; }
     if ($token->name eq 'lbrace') { return $self->dot_lbrace; }
-    if ($token->name eq 'space') { return $self->dot_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -427,7 +413,7 @@ sub dot {
     }
 
   AGAIN:
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->dot_default;
 }
 
 sub dot_fqid {
@@ -450,7 +436,6 @@ sub dot_fqid {
 
 sub dot_lbrace {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -467,7 +452,6 @@ sub dot_lbrace {
 
 sub dot_lbrace_id {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -500,7 +484,7 @@ sub dot_lbrace_id_rbrace {
     return 1;
 }
 
-sub dot_space {
+sub dot_default {
     my ($self) = @_;
 
     my $has = [];
@@ -520,7 +504,6 @@ sub dot_space {
 
 sub element {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -570,7 +553,6 @@ sub element {
 
 sub element_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -605,7 +587,6 @@ sub element_expr_comma {
 
 sub element_statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -640,7 +621,6 @@ sub element_statement_comma {
 
 sub else {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -675,7 +655,6 @@ sub else_codeblock {
 
 sub elseif {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -711,7 +690,6 @@ sub elseif {
 
 sub elseif_cond {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -746,7 +724,6 @@ sub elseif_cond_codeblock {
 
 sub elseif_fqid {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -763,7 +740,6 @@ sub elseif_fqid {
 
 sub elseif_fqid_codeblock {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -798,7 +774,6 @@ sub elseif_fqid_codeblock_hashrocket {
 
 sub elseifblock {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -815,7 +790,6 @@ sub elseifblock {
 
 sub elseifblock_elseif {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -850,7 +824,6 @@ sub elseifblock_elseif {
 
 sub elseifblock_elseif_cond {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -885,7 +858,6 @@ sub elseifblock_elseif_cond_codeblock {
 
 sub embraces {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'array',
         'has'  => [],
@@ -895,7 +867,6 @@ sub embraces {
 
 sub emcurlies {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'hash',
         'has'  => [],
@@ -905,7 +876,6 @@ sub emcurlies {
 
 sub emparens {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -942,7 +912,6 @@ sub emparens_array {
 
 sub expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -981,7 +950,6 @@ sub expr {
 
 sub expr_binand {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1034,7 +1002,6 @@ sub expr_binand_expr {
 
 sub expr_binor {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1087,7 +1054,6 @@ sub expr_binor_expr {
 
 sub expr_binxor {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1158,7 +1124,6 @@ sub expr_comma {
 
 sub expr_eqeq {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1211,7 +1176,6 @@ sub expr_eqeq_expr {
 
 sub expr_fslash {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1264,7 +1228,6 @@ sub expr_fslash_expr {
 
 sub expr_gt {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1317,7 +1280,6 @@ sub expr_gt_expr {
 
 sub expr_logand {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1370,7 +1332,6 @@ sub expr_logand_expr {
 
 sub expr_logor {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1423,7 +1384,6 @@ sub expr_logor_expr {
 
 sub expr_logxor {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1476,7 +1436,6 @@ sub expr_logxor_expr {
 
 sub expr_lt {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1529,7 +1488,6 @@ sub expr_lt_expr {
 
 sub expr_match {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1582,7 +1540,6 @@ sub expr_match_expr {
 
 sub expr_minus {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1635,7 +1592,6 @@ sub expr_minus_expr {
 
 sub expr_ne {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1688,7 +1644,6 @@ sub expr_ne_expr {
 
 sub expr_ngt {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1741,7 +1696,6 @@ sub expr_ngt_expr {
 
 sub expr_nlt {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1794,7 +1748,6 @@ sub expr_nlt_expr {
 
 sub expr_nomatch {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1847,7 +1800,6 @@ sub expr_nomatch_expr {
 
 sub expr_percent {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1900,7 +1852,6 @@ sub expr_percent_expr {
 
 sub expr_plus {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -1953,7 +1904,6 @@ sub expr_plus_expr {
 
 sub expr_shl {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2006,7 +1956,6 @@ sub expr_shl_expr {
 
 sub expr_shr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2059,7 +2008,6 @@ sub expr_shr_expr {
 
 sub expr_star {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2112,7 +2060,6 @@ sub expr_star_expr {
 
 sub expr_starstar {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2165,7 +2112,6 @@ sub expr_starstar_expr {
 
 sub for {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2188,7 +2134,6 @@ sub for {
 
 sub for_fqid {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2223,7 +2168,6 @@ sub for_fqid_codeblock {
 
 sub for_id {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2240,7 +2184,6 @@ sub for_id {
 
 sub for_id_in {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2262,7 +2205,6 @@ sub for_id_in {
 
 sub for_id_in_fqid {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2299,7 +2241,6 @@ sub for_id_in_fqid_array {
 
 sub for_id_in_range {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2336,7 +2277,6 @@ sub for_id_in_range_array {
 
 sub for_range {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2373,12 +2313,10 @@ sub for_range_array {
 
 sub fqid {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'minusminus') { return $self->fqid_minusminus; }
     if ($token->name eq 'plusplus') { return $self->fqid_plusplus; }
-    if ($token->name eq 'space') { return $self->fqid_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -2393,7 +2331,7 @@ sub fqid {
     if ($token->name eq 'eq') { return $self->fqid_eq; }
     if ($token->name eq 'parenexpr') { return $self->fqid_parenexpr; }
     if ($token->name eq 'lparen') { $self->lparen; $token = $self->top; goto AGAIN; }
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->fqid_default;
 }
 
 sub fqid_minusminus {
@@ -2432,24 +2370,6 @@ sub fqid_plusplus {
     return 1;
 }
 
-sub fqid_space {
-    my ($self) = @_;
-
-    my $has = [];
-    foreach (1..2) {
-        my $thing = $self->pop;
-        next if ref $thing->{has} ne 'ARRAY';
-        if ( scalar @{ $thing->{has} } == 1 ) { push @{ $has }, $thing->{has}[0]; }
-        else { push @{$has}, $thing; }
-    }
-
-    $self->push( Kent::Token->new(
-        'name' => 'expr',
-        'has'  => $has,
-        ) );
-    return 1;
-}
-
 sub fqid_arglist {
     my ($self) = @_;
 
@@ -2470,7 +2390,6 @@ sub fqid_arglist {
 
 sub fqid_compose {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2612,6 +2531,24 @@ sub fqid_compose_str {
     return 1;
 }
 
+sub fqid_default {
+    my ($self) = @_;
+
+    my $has = [];
+    foreach (1..2) {
+        my $thing = $self->pop;
+        next if ref $thing->{has} ne 'ARRAY';
+        if ( scalar @{ $thing->{has} } == 1 ) { push @{ $has }, $thing->{has}[0]; }
+        else { push @{$has}, $thing; }
+    }
+
+    $self->push( Kent::Token->new(
+        'name' => 'expr',
+        'has'  => $has,
+        ) );
+    return 1;
+}
+
 sub fqid_emparens {
     my ($self) = @_;
 
@@ -2632,7 +2569,6 @@ sub fqid_emparens {
 
 sub fqid_eq {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2722,7 +2658,6 @@ sub fqid_parenexpr {
 
 sub hashkey {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2739,7 +2674,6 @@ sub hashkey {
 
 sub hashkey_comma {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2756,7 +2690,6 @@ sub hashkey_comma {
 
 sub hashkey_comma_str {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2773,7 +2706,6 @@ sub hashkey_comma_str {
 
 sub hashkey_comma_str_hashrocket {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2808,7 +2740,6 @@ sub hashkey_comma_str_hashrocket {
 
 sub hashkey_comma_str_hashrocket_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2843,7 +2774,6 @@ sub hashkey_comma_str_hashrocket_expr_comma {
 
 sub hex {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'num',
         'has'  => [],
@@ -2853,11 +2783,9 @@ sub hex {
 
 sub id {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'dotdot') { return $self->id_dotdot; }
-    if ($token->name eq 'space') { return $self->id_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -2866,12 +2794,11 @@ sub id {
     }
 
   AGAIN:
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->id_default;
 }
 
 sub id_dotdot {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'id') { return $self->id_dotdot_id; }
@@ -2923,7 +2850,7 @@ sub id_dotdot_int {
     return 1;
 }
 
-sub id_space {
+sub id_default {
     my ($self) = @_;
 
     my $has = [];
@@ -2943,7 +2870,6 @@ sub id_space {
 
 sub if {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -2979,7 +2905,6 @@ sub if {
 
 sub if_cond {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3014,7 +2939,6 @@ sub if_cond_codeblock {
 
 sub if_fqid {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3049,10 +2973,8 @@ sub if_fqid_codeblock {
 
 sub ifblock {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
-    if ($token->name eq 'space') { return $self->ifblock_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -3066,10 +2988,10 @@ sub ifblock {
     if ($token->name eq 'else') { $self->else; $token = $self->top; goto AGAIN; }
     if ($token->name eq 'elseif') { $self->elseif; $token = $self->top; goto AGAIN; }
     if ($token->name eq 'elseifblock') { $self->elseifblock; $token = $self->top; goto AGAIN; }
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->ifblock_default;
 }
 
-sub ifblock_space {
+sub ifblock_default {
     my ($self) = @_;
 
     my $has = [];
@@ -3107,10 +3029,8 @@ sub ifblock_elseblock {
 
 sub ifblock_elseifblock {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
-    if ($token->name eq 'space') { return $self->ifblock_elseifblock_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -3121,10 +3041,10 @@ sub ifblock_elseifblock {
   AGAIN:
     if ($token->name eq 'elseblock') { return $self->ifblock_elseifblock_elseblock; }
     if ($token->name eq 'else') { $self->else; $token = $self->top; goto AGAIN; }
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->ifblock_elseifblock_default;
 }
 
-sub ifblock_elseifblock_space {
+sub ifblock_elseifblock_default {
     my ($self) = @_;
 
     my $has = [];
@@ -3162,11 +3082,9 @@ sub ifblock_elseifblock_elseblock {
 
 sub int {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'dotdot') { return $self->int_dotdot; }
-    if ($token->name eq 'space') { return $self->int_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -3175,12 +3093,11 @@ sub int {
     }
 
   AGAIN:
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->int_default;
 }
 
 sub int_dotdot {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'id') { return $self->int_dotdot_id; }
@@ -3232,7 +3149,7 @@ sub int_dotdot_int {
     return 1;
 }
 
-sub int_space {
+sub int_default {
     my ($self) = @_;
 
     my $has = [];
@@ -3252,7 +3169,6 @@ sub int_space {
 
 sub lbrace {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3305,7 +3221,6 @@ sub lbrace {
 
 sub lbrace_element {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3356,7 +3271,6 @@ sub lbrace_element {
 
 sub lbrace_element_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3409,7 +3323,6 @@ sub lbrace_element_rbrace {
 
 sub lbrace_element_statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3444,7 +3357,6 @@ sub lbrace_element_statement_rbrace {
 
 sub lbrace_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3497,7 +3409,6 @@ sub lbrace_rbrace {
 
 sub lbrace_statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3532,7 +3443,6 @@ sub lbrace_statement_rbrace {
 
 sub lcmt {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'char') { return $self->lcmt_char; }
@@ -3550,7 +3460,6 @@ sub lcmt {
 
 sub lcmt_char {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3603,7 +3512,6 @@ sub lcmt_rcmt {
 
 sub lcurly {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3624,7 +3532,6 @@ sub lcurly {
 
 sub lcurly_hashkey {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3660,7 +3567,6 @@ sub lcurly_hashkey_rcurly {
 
 sub lcurly_hashkey_str {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3677,7 +3583,6 @@ sub lcurly_hashkey_str {
 
 sub lcurly_hashkey_str_hashrocket {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3712,7 +3617,6 @@ sub lcurly_hashkey_str_hashrocket {
 
 sub lcurly_hashkey_str_hashrocket_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3765,7 +3669,6 @@ sub lcurly_rcurly {
 
 sub lcurly_str {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3782,7 +3685,6 @@ sub lcurly_str {
 
 sub lcurly_str_hashrocket {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3817,7 +3719,6 @@ sub lcurly_str_hashrocket {
 
 sub lcurly_str_hashrocket_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3852,7 +3753,6 @@ sub lcurly_str_hashrocket_expr_rcurly {
 
 sub literal {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'expr',
         'has'  => [],
@@ -3862,7 +3762,6 @@ sub literal {
 
 sub loop {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'statement',
         'has'  => [],
@@ -3872,7 +3771,6 @@ sub loop {
 
 sub lparen {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3908,7 +3806,6 @@ sub lparen {
 
 sub lparen_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -3961,7 +3858,6 @@ sub lparen_rparen {
 
 sub minus {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'fqid') { return $self->minus_fqid; }
@@ -3996,7 +3892,6 @@ sub minus_fqid {
 
 sub minusminus {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'fqid') { return $self->minusminus_fqid; }
@@ -4031,7 +3926,6 @@ sub minusminus_fqid {
 
 sub num {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'literal',
         'has'  => [],
@@ -4041,7 +3935,6 @@ sub num {
 
 sub oct {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'num',
         'has'  => [],
@@ -4051,7 +3944,6 @@ sub oct {
 
 sub plusplus {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
     if ($token->name eq 'fqid') { return $self->plusplus_fqid; }
@@ -4086,7 +3978,6 @@ sub plusplus_fqid {
 
 sub range {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'literal',
         'has'  => [],
@@ -4096,7 +3987,6 @@ sub range {
 
 sub rat {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'num',
         'has'  => [],
@@ -4106,7 +3996,6 @@ sub rat {
 
 sub sci {
     my ($self) = @_;
-    $self->pop;
     $self->push( Kent::Token->new(
         'name' => 'num',
         'has'  => [],
@@ -4116,7 +4005,6 @@ sub sci {
 
 sub statement {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4171,10 +4059,8 @@ sub statement_comment {
 
 sub str {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
-    if ($token->name eq 'space') { return $self->str_space; }
 
     while ($token->name eq 'space') {
         $self->pop;
@@ -4184,10 +4070,10 @@ sub str {
 
   AGAIN:
     if ($token->name eq 'hashrocket') { return $self->str_hashrocket; }
-    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+   return $self->str_default;
 }
 
-sub str_space {
+sub str_default {
     my ($self) = @_;
 
     my $has = [];
@@ -4207,7 +4093,6 @@ sub str_space {
 
 sub str_hashrocket {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4242,7 +4127,6 @@ sub str_hashrocket {
 
 sub str_hashrocket_expr {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4277,7 +4161,6 @@ sub str_hashrocket_expr_comma {
 
 sub until {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4294,7 +4177,6 @@ sub until {
 
 sub until_condition {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4331,7 +4213,6 @@ sub until_condition_array {
 
 sub while {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 
@@ -4348,7 +4229,6 @@ sub while {
 
 sub while_condition {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
     my $token = $lexer->next;
     $self->push($token);
 

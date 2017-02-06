@@ -5,6 +5,7 @@ use warnings;
 use v5.14;
 
 use Data::Dumper;
+use Kent::Util;
 $Data::Dumper::Sortkeys = 1;
 
 use JSON;
@@ -14,7 +15,7 @@ my $debug            = 0;
 
 my $printer = JSON->new->canonical( 1 )->pretty( 1 );
 
-my $lines   = [];
+my $lines = [];
 
 open( my $fh, '<', $grammar_filename ) or die "Couldn't open $grammar_filename for reading: $!";
 @{$lines} = <$fh>;
@@ -28,7 +29,7 @@ my $choices = choices_from_rules( $rules );
 my $states  = states_from_choices( $choices );
 
 # summarize_rules($rules);
-print_state_table_module($states);
+print_state_table_module( $states );
 
 exit 0;
 
@@ -42,7 +43,7 @@ sub rules_from_lines {
         $rule->{token_name} = $parts[0];
         $rule->{parts}      = [ grep { $_ ne '' } @parts[ 1 .. 6 ] ];
         $rule->{category}   = $parts[7];
-        $rule->{sort_order} = $parts[8] + 0; # Remove newline and cast to IV
+        $rule->{sort_order} = $parts[8] + 0;                            # Remove newline and cast to IV
         push @{$rules}, $rule;
     }
     return $rules;
@@ -74,8 +75,8 @@ sub choices_from_rules {
             my $part = shift @parts;
 
             if ( scalar @parts == 0 ) {
-                if   ( ref $ref->{$part} eq 'HASH' ) { $ref->{$part}{'*space'} = $token_name; }
-                else                                 { $ref->{$part}           = $token_name; }
+                if   ( ref $ref->{$part} eq 'HASH' ) { $ref->{$part}{'default'} = $token_name; }
+                else                                 { $ref->{$part}            = $token_name; }
                 last;
             }
             else {
@@ -85,7 +86,7 @@ sub choices_from_rules {
                 }
                 else {
                     my $holder = $ref->{$part};
-                    $ref->{$part} = { '*space' => $holder };
+                    $ref->{$part} = { 'default' => $holder };
                     $ref = $ref->{$part};
                 }
             }
@@ -111,28 +112,39 @@ sub states_from_choices {
             # "others" are checked last. Their return replaces the token being
             #     evaluated, and we go back to checking "nexts". They
             #     will call their own name, as if starting from scratch.
-            my ( @nows, @nexts );
+            my ( @nows, @nexts, $default );
             foreach my $choice ( sort keys %{ $choices->{$key} } ) {
                 next if ref $choice eq 'HASH';
-                if   ( $choice =~ m/[*]/ ) { push @nows,  $choice; }
-                else                       { push @nexts, $choice; }
+                if ( $choice =~ m/[*]/ ) { push @nows, $choice; }
+                elsif ( $choice eq 'default' ) { $default = $choice; }
+                else                           { push @nexts, $choice; }
             }
 
             foreach my $now ( @nows ) { $now =~ s/[*]//; }
+
             push @states,
-                { name   => "$name_so_far$key",
-                  nows   => \@nows,
-                  nexts  => \@nexts,
-                  depth  => $depth,
-                  others => find_others( $choices->{$key} ),
-                };
+                { 'name'    => "$name_so_far$key",
+                  'depth'   => $depth,
+                  'nows'    => \@nows,
+                  'nexts'   => \@nexts,
+                  'others'  => find_others( $choices->{$key} ),
+                  'default' => $default, };
             push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
         }
         else {
-            push @states,
-                { name    => "$name_so_far$key",
-                  returns => $choices->{$key},
-                  depth   => $depth, };
+            if ( $choices->{$key} eq 'default' ) {
+                push @states,
+                    { 'name'    => "$name_so_far$key",
+                      'returns' => $choices->{$key},
+                      'default' => 1,
+                      'depth'   => $depth, };
+            }
+            else {
+                push @states,
+                    { 'name'    => "$name_so_far$key",
+                      'returns' => $choices->{$key},
+                      'depth'   => $depth, };
+            }
         }
     }
     foreach my $state ( @states ) { $state->{name} =~ s/[*]//; }
@@ -144,9 +156,9 @@ sub find_others {
     my %others;
     my @to_check;
 
-    push @to_check, keys %{ $choice };
+    push @to_check, keys %{$choice};
 
-    while (scalar @to_check) {
+    while ( scalar @to_check ) {
         my $key = shift @to_check;
 
         foreach my $rule ( grep { $_->{token_name} eq $key } @{$rules} ) {
@@ -160,11 +172,11 @@ sub find_others {
 }
 
 sub summarize_rules {
-    my ($rules) = @_;
+    my ( $rules ) = @_;
 
     my $last_token_name;
 
-    foreach my $rule ( sort { $a->{sort_order} <=> $b->{sort_order} } @{ $rules } ) {
+    foreach my $rule ( sort { $a->{sort_order} <=> $b->{sort_order} } @{$rules} ) {
         next unless scalar @{ $rule->{parts} };
         if ( $rule->{token_name} ne $last_token_name ) {
             say "$rule->{token_name}";
@@ -197,7 +209,7 @@ sub summarize_states {
 }
 
 sub print_state_table_module {
-    my ($states) = @_;
+    my ( $states ) = @_;
 
     say "package Kent::Parser::States;";
     say '';
@@ -206,7 +218,7 @@ sub print_state_table_module {
     say 'use v5.14;';
     say '';
 
-    foreach my $state ( @{ $states } ) {
+    foreach my $state ( @{$states} ) {
         if ( $state->{returns} ) {
             if ( $state->{depth} > 1 ) {
                 say "sub $state->{name} {";
@@ -228,10 +240,21 @@ sub print_state_table_module {
                 say "}";
                 say '';
             }
-            else {
+            elsif ( $state->{default} ) {
                 say "sub $state->{name} {";
                 say '    my ($self) = @_;';
                 say '    $self->pop;';
+                say "    \$self->push( Kent::Token->new(";
+                say "        'name' => '$state->{returns}',";
+                say "        'has'  => [],";
+                say '    ) );';
+                say '    return 1;';
+                say "}";
+                say '';
+            }
+            else {
+                say "sub $state->{name} {";
+                say '    my ($self) = @_;';
                 say "    \$self->push( Kent::Token->new(";
                 say "        'name' => '$state->{returns}',";
                 say "        'has'  => [],";
@@ -244,7 +267,6 @@ sub print_state_table_module {
         else {
             say "sub $state->{name} {";
             say '    my ($self) = @_;';
-            say '    my $lexer  = $self->lexer;';
             say '    my $token = $lexer->next;';
             say '    $self->push($token);';
             foreach my $now ( @{ $state->{nows} } ) {
@@ -258,13 +280,19 @@ sub print_state_table_module {
             say '    }';
             say '';
             say '  AGAIN:';
+
             foreach my $next ( @{ $state->{nexts} } ) {
                 say "    if (\$token->name eq '$next') { return \$self->$state->{name}_$next; }";
             }
             foreach my $other ( @{ $state->{others} } ) {
                 say "    if (\$token->name eq '$other') { \$self->$other; \$token = \$self->top; goto AGAIN; }";
             }
-            say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
+            if ( defined $state->{default} ) {
+                say "   return \$self->$state->{name}_default;";
+            }
+            else {
+                say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
+            }
             say '}';
             say '';
         }
