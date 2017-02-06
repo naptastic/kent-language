@@ -17,14 +17,16 @@ my @keywords   = @Kent::Lexer::Keywords::keywords;
 sub new {
     my ( $class, %args ) = @_;
 
-    my $self = { 'name'         => $args{name},
-                 'raw'          => $args{raw},
-                 'width'        => length( $args{raw} ), #XXX: This is currently wrong for opening and closing quotes.
-                 'line'         => $args{line},
-                 'column'       => $args{column},
-                 'next_context' => $args{next_context},
-                 'has'          => $args{has}, };
-                 # XXX Does 'next_context' actually need to be stored here?
+    my $self = {
+              'name'         => $args{name},
+              'raw'          => $args{raw},
+              'width'        => length( $args{raw} ),    #XXX: This is currently wrong for opening and closing quotes.
+              'line'         => $args{line},
+              'column'       => $args{column},
+              'next_context' => $args{next_context},
+              'has'          => $args{has}, };
+
+    # XXX Does 'next_context' actually need to be stored here?
 
     $self->{has} //= [];
 
@@ -40,11 +42,15 @@ sub column { $_[0]->{line}; }
 
 sub TO_JSON {
     my ( $self ) = @_;
-    return { 'name'   => $self->{name},
-             'width'  => $self->{width},
-             'line'   => $self->{line},
-             'column' => $self->{column},
-             'has'    => $self->{has} };
+
+    my $ret = { 'name' => $self->{name} };
+
+    if ( scalar @{ $self->{has} } ) { $ret->{has}    = $self->{has}; }
+    if ( defined $self->{width} )   { $ret->{width}  = $self->{width}; }
+    if ( defined $self->{line} )    { $ret->{line}   = $self->{line}; }
+    if ( defined $self->{column} )  { $ret->{column} = $self->{column}; }
+
+    return $ret;
 }
 
 1;
