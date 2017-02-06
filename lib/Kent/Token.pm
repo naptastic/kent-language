@@ -23,8 +23,10 @@ sub new {
                  'line'         => $args{line},
                  'column'       => $args{column},
                  'next_context' => $args{next_context},
-                 'has'          => $args{has} // [] };
+                 'has'          => $args{has}, };
                  # XXX Does 'next_context' actually need to be stored here?
+
+    $self->{has} //= [];
 
     return bless $self, $class;
 }

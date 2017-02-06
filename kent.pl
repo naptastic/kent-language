@@ -22,7 +22,7 @@ sub script {
     my $parser = Kent::Parser->new( sourcecode => $sourcecode );
     my $ast = $parser->parse();
 
-    say Data::Dumper::Dumper($ast);
+    say Kent::Util::dump($ast);
 
     return 1;
 }

@@ -123,6 +123,7 @@ statement,loop,,,,,,Statements,120
 function,emparens,array,,,,,Functions,122
 ,,,,,,,,123
 code,statement,comma,,,,,Structure,124
-file,bof,code,statement,eof,,,Structure,125
-file,bof,code,eof,,,,Structure,126
-file,bof,statement,eof,,,,Structure,127
+code,bof,statement,comma,,,,Structure,125
+file,bof,code,statement,eof,,,Structure,126
+file,bof,code,eof,,,,Structure,127
+file,bof,statement,eof,,,,Structure,128

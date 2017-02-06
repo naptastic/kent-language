@@ -21,12 +21,8 @@ sub new {
 
 sub parse {
     my ($self) = @_;
-    my $lexer  = $self->lexer;
-    my $token  = $lexer->next;
-    my $name   = $token->name;
-
-    $self->push( $token );
-    return $self->Kent::Parser::States::bof;
+    $self->Kent::Parser::States::bof;
+    return $self->{stack};
 }
 
 sub lexer { $_[0]->{lexer} }
@@ -42,6 +38,11 @@ sub pop {
     my ( $self ) = @_;
     my $thingy = pop @{ $self->{stack} };
     return $thingy;
+}
+
+sub top {
+    my ( $self ) = @_;
+    return $self->{stack}[-1];
 }
 
 sub join {

@@ -212,23 +212,31 @@ sub print_state_table_module {
                 say "sub $state->{name} {";
                 say '    my ($self) = @_;';
                 say '';
-                say '    my @has;';
+                say '    my $has = [];';
                 say "    foreach (1..$state->{depth}) {";
                 say "        my \$thing = \$self->pop;";
-                say "        if ( scalar \@{ \$thing->{has} } == 1 ) { push \@has, \$thing->{has}[0]; }";
-                say "        else { push \@has, \$thing; }";
+                say "        next if ref \$thing->{has} ne 'ARRAY';";
+                say "        if ( scalar \@{ \$thing->{has} } == 1 ) { push \@{ \$has }, \$thing->{has}[0]; }";
+                say "        else { push \@{\$has}, \$thing; }";
                 say '    }';
                 say '';
-                say "    return Kent::Token->new(";
-                say "        { 'name' => '$state->{returns}',";
-                say "          'has'  => \\\@has, }";
-                say "        );";
+                say '    $self->push( Kent::Token->new(';
+                say "        'name' => '$state->{returns}',";
+                say "        'has'  => \$has,";
+                say "        ) );";
+                say '    return 1;';
                 say "}";
                 say '';
             }
             else {
                 say "sub $state->{name} {";
-                say "    return Kent::Token->new( { 'name' => '$state->{returns}' } );";
+                say '    my ($self) = @_;';
+                say '    $self->pop;';
+                say "    \$self->push( Kent::Token->new(";
+                say "        'name' => '$state->{returns}',";
+                say "        'has'  => [],";
+                say '    ) );';
+                say '    return 1;';
                 say "}";
                 say '';
             }
@@ -240,17 +248,21 @@ sub print_state_table_module {
             say '    my $token = $lexer->next;';
             say '    $self->push($token);';
             foreach my $now ( @{ $state->{nows} } ) {
-                say "    if (\$token->name eq '$now') { return Kent::Parser::States::$state->{name}_$now(\$self); }";
+                say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
             }
             say '';
-            say '    while ($token->name eq \'space\') { $self->pop; $token = $lexer->next; }';
+            say '    while ($token->name eq \'space\') {';
+            say '        $self->pop;';
+            say '        $token = $lexer->next;';
+            say '        $self->push($token);';
+            say '    }';
             say '';
             say '  AGAIN:';
             foreach my $next ( @{ $state->{nexts} } ) {
-                say "    if (\$token->name eq '$next') { return Kent::Parser::States::$state->{name}_$next(\$self); }";
+                say "    if (\$token->name eq '$next') { return \$self->$state->{name}_$next; }";
             }
             foreach my $other ( @{ $state->{others} } ) {
-                say "    if (\$token->name eq '$other') { \$token = Kent::Parser::States::$other(\$self); goto AGAIN; }";
+                say "    if (\$token->name eq '$other') { \$self->$other; \$token = \$self->top; goto AGAIN; }";
             }
             say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
             say '}';
