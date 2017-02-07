@@ -29,7 +29,8 @@ my $choices = choices_from_rules( $rules );
 my $states  = states_from_choices( $choices );
 
 # summarize_rules($rules);
-print_state_table_module( $states );
+# print_state_table_module( $states );
+summarize_states($states);
 
 exit 0;
 
@@ -192,17 +193,18 @@ sub summarize_choices {
 
 sub summarize_states {
     my ( $states ) = @_;
-    foreach my $state ( grep { $_->{name} =~ m/(num|int)/ } @{$states} ) {
+    foreach my $state ( @{$states} ) {
         say "$state->{name}";
         if ( $state->{returns} ) {
-            say "    return: $state->{returns} with $state->{depth} parts";
-            say;
+            say "    return:  $state->{returns} with $state->{depth} parts";
+            say '';
         }
         else {
-            say "    nows:   $_" foreach @{ $state->{nows} };
-            say "    nexts:  $_" foreach @{ $state->{nexts} };
-            say "    others: $_" foreach @{ $state->{others} };
-            say;
+            say "    nows:    $_" foreach @{ $state->{nows} };
+            say "    nexts:   $_" foreach @{ $state->{nexts} };
+            say "    others:  $_" foreach @{ $state->{others} };
+            say "    default: $state->{default}" if defined $state->{default};
+            say '';
         }
     }
     return 1;
@@ -220,7 +222,19 @@ sub print_state_table_module {
 
     foreach my $state ( @{$states} ) {
         if ( $state->{returns} ) {
-            if ( $state->{depth} > 1 ) {
+            if ( $state->{default} ) {
+                say "sub $state->{name} {";
+                say '    my ($self) = @_;';
+                say '    $self->pop;';
+                say "    \$self->push( Kent::Token->new(";
+                say "        'name' => '$state->{returns}',";
+                say "        'has'  => [],";
+                say '    ) );';
+                say '    return 1;';
+                say "}";
+                say '';
+            }
+            elsif ( $state->{depth} > 1 ) {
                 say "sub $state->{name} {";
                 say '    my ($self) = @_;';
                 say '';
@@ -240,18 +254,6 @@ sub print_state_table_module {
                 say "}";
                 say '';
             }
-            elsif ( $state->{default} ) {
-                say "sub $state->{name} {";
-                say '    my ($self) = @_;';
-                say '    $self->pop;';
-                say "    \$self->push( Kent::Token->new(";
-                say "        'name' => '$state->{returns}',";
-                say "        'has'  => [],";
-                say '    ) );';
-                say '    return 1;';
-                say "}";
-                say '';
-            }
             else {
                 say "sub $state->{name} {";
                 say '    my ($self) = @_;';
@@ -267,17 +269,23 @@ sub print_state_table_module {
         else {
             say "sub $state->{name} {";
             say '    my ($self) = @_;';
+            say '    my $lexer = $state->lexer;';
             say '    my $token = $lexer->next;';
             say '    $self->push($token);';
             foreach my $now ( @{ $state->{nows} } ) {
                 say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
             }
             say '';
-            say '    while ($token->name eq \'space\') {';
-            say '        $self->pop;';
-            say '        $token = $lexer->next;';
-            say '        $self->push($token);';
-            say '    }';
+            if ( $state->{default} ) {
+                say "    if (\$token->name eq \'space\') { return \$self->$state->{name}_default; };";
+            }
+            else {
+                say '    while ($token->name eq \'space\') {';
+                say '        $self->pop;';
+                say '        $token = $lexer->next;';
+                say '        $self->push($token);';
+                say '    }';
+            }
             say '';
             say '  AGAIN:';
 
@@ -288,7 +296,7 @@ sub print_state_table_module {
                 say "    if (\$token->name eq '$other') { \$self->$other; \$token = \$self->top; goto AGAIN; }";
             }
             if ( defined $state->{default} ) {
-                say "   return \$self->$state->{name}_default;";
+                say "    return \$self->$state->{name}_default;";
             }
             else {
                 say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
