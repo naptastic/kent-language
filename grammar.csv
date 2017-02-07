@@ -113,7 +113,7 @@ statement,fqid,compose,hash,,,,Statements,111
 statement,fqid,compose,num,,,,Statements,112
 statement,fqid,compose,str,,,,Statements,113
 statement,annotated,,,,,,Statements,114
-statement,array,,,,,,Statements,115
+,,,,,,,,115
 statement,branch,,,,,,Statements,116
 statement,fqid,arglist,,,,,Statements,117
 statement,fqid,emparens,,,,,Statements,118
