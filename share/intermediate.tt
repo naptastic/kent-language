@@ -1,0 +1,33 @@
+sub [% name %] {
+    my ($self) = @_;
+    my $lexer = $self->lexer;
+    my $token = $lexer->next;
+    $self->push($token);
+[% FOREACH now IN nows -%]
+    if ($token->name eq '[% now %]') { return $self->[% name %]_[% now %] }
+[% END -%]
+
+    while ($token->name eq 'space') {
+        $self->pop;
+        $token = $lexer->next;
+        $self->push($token);
+    }
+
+  AGAIN:
+
+[% FOREACH next IN nexts -%]
+    if ($token->name eq '[% next %]') { return $self->[% name %]_[% next %] }
+[% END -%]
+[% FOREACH other IN others -%]
+    if ($token->name eq '[% other %]') {
+        $self->[% other %];
+        $token = $self->top;
+        goto AGAIN; }
+[% END -%]
+[% IF default -%]
+    return $self->[% name %]_default;
+[% ELSE -%]
+    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";
+[% END -%]
+}
+

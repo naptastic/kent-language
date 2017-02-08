@@ -9,18 +9,26 @@ use Kent::Util;
 $Data::Dumper::Sortkeys = 1;
 
 use JSON;
+use Template;
 
 my $grammar_filename = 'grammar.csv';
 my $debug            = 0;
 
 my $printer = JSON->new->canonical( 1 )->pretty( 1 );
+my $templater = Template->new( { 'INCLUDE_PATH' => 'share/', } );
 
-my $lines = [];
+my $header = <<EOM;
+package Kent::Parser::States;
 
-open( my $fh, '<', $grammar_filename ) or die "Couldn't open $grammar_filename for reading: $!";
-@{$lines} = <$fh>;
-close $fh;
+use strict;
+use warnings;
+use v5.14;
 
+EOM
+
+my $footer = "1;\n";
+
+my $lines = [ Kent::Util::slurp($grammar_filename) ];
 # first row is comments; chunk it
 shift @{$lines};
 
@@ -29,8 +37,9 @@ my $choices = choices_from_rules( $rules );
 my $states  = states_from_choices( $choices );
 
 # summarize_rules($rules);
-# print_state_table_module( $states );
-summarize_states($states);
+print_state_table_module( $states );
+
+# summarize_states($states);
 
 exit 0;
 
@@ -97,10 +106,10 @@ sub choices_from_rules {
 }
 
 sub states_from_choices {
-    my ( $choices, $name_so_far, $depth ) = @_;
+    my ( $choices, $name, $depth ) = @_;
     my @states;
 
-    $name_so_far //= '';
+    $name //= [];
     $depth       //= 1;
 
     foreach my $key ( sort keys %$choices ) {
@@ -124,25 +133,25 @@ sub states_from_choices {
             foreach my $now ( @nows ) { $now =~ s/[*]//; }
 
             push @states,
-                { 'name'    => "$name_so_far$key",
+                { 'name'    => join( '_', @{ $name }, $key),
                   'depth'   => $depth,
                   'nows'    => \@nows,
                   'nexts'   => \@nexts,
                   'others'  => find_others( $choices->{$key} ),
                   'default' => $default, };
-            push @states, @{ states_from_choices( $choices->{$key}, "$name_so_far$key\_", $depth + 1 ) };
+            push @states, @{ states_from_choices( $choices->{$key}, [ @{ $name }, $key ], $depth + 1 ) };
         }
         else {
-            if ( $choices->{$key} eq 'default' ) {
+            if ( $key eq 'default' ) {
                 push @states,
-                    { 'name'    => "$name_so_far$key",
+                    { 'name'    => join( '_', @{ $name }, $key),
                       'returns' => $choices->{$key},
                       'default' => 1,
                       'depth'   => $depth, };
             }
             else {
                 push @states,
-                    { 'name'    => "$name_so_far$key",
+                    { 'name'    => join( '_', @{ $name }, $key),
                       'returns' => $choices->{$key},
                       'depth'   => $depth, };
             }
@@ -213,98 +222,20 @@ sub summarize_states {
 sub print_state_table_module {
     my ( $states ) = @_;
 
-    say "package Kent::Parser::States;";
-    say '';
-    say 'use strict;';
-    say 'use warnings;';
-    say 'use v5.14;';
-    say '';
+    print $header;
 
     foreach my $state ( @{$states} ) {
         if ( $state->{returns} ) {
-            if ( $state->{default} ) {
-                say "sub $state->{name} {";
-                say '    my ($self) = @_;';
-                say '    $self->pop;';
-                say "    \$self->push( Kent::Token->new(";
-                say "        'name' => '$state->{returns}',";
-                say "        'has'  => [],";
-                say '    ) );';
-                say '    return 1;';
-                say "}";
-                say '';
-            }
-            elsif ( $state->{depth} > 1 ) {
-                say "sub $state->{name} {";
-                say '    my ($self) = @_;';
-                say '';
-                say '    my $has = [];';
-                say "    foreach (1..$state->{depth}) {";
-                say "        my \$thing = \$self->pop;";
-                say "        next if ref \$thing->{has} ne 'ARRAY';";
-                say "        if ( scalar \@{ \$thing->{has} } == 1 ) { push \@{ \$has }, \$thing->{has}[0]; }";
-                say "        else { push \@{\$has}, \$thing; }";
-                say '    }';
-                say '';
-                say '    $self->push( Kent::Token->new(';
-                say "        'name' => '$state->{returns}',";
-                say "        'has'  => \$has,";
-                say "        ) );";
-                say '    return 1;';
-                say "}";
-                say '';
-            }
-            else {
-                say "sub $state->{name} {";
-                say '    my ($self) = @_;';
-                say "    \$self->push( Kent::Token->new(";
-                say "        'name' => '$state->{returns}',";
-                say "        'has'  => [],";
-                say '    ) );';
-                say '    return 1;';
-                say "}";
-                say '';
-            }
+            if    ( $state->{default} )   { $templater->process( 'terminal_default.tt', $state ); }
+            elsif ( $state->{depth} > 1 ) { $templater->process( 'terminal_multi.tt',   $state ); }
+            else                          { $templater->process( 'terminal_single.tt',  $state ); }
         }
         else {
-            say "sub $state->{name} {";
-            say '    my ($self) = @_;';
-            say '    my $lexer = $state->lexer;';
-            say '    my $token = $lexer->next;';
-            say '    $self->push($token);';
-            foreach my $now ( @{ $state->{nows} } ) {
-                say "    if (\$token->name eq '$now') { return \$self->$state->{name}_$now; }";
-            }
-            say '';
-            if ( $state->{default} ) {
-                say "    if (\$token->name eq \'space\') { return \$self->$state->{name}_default; };";
-            }
-            else {
-                say '    while ($token->name eq \'space\') {';
-                say '        $self->pop;';
-                say '        $token = $lexer->next;';
-                say '        $self->push($token);';
-                say '    }';
-            }
-            say '';
-            say '  AGAIN:';
-
-            foreach my $next ( @{ $state->{nexts} } ) {
-                say "    if (\$token->name eq '$next') { return \$self->$state->{name}_$next; }";
-            }
-            foreach my $other ( @{ $state->{others} } ) {
-                say "    if (\$token->name eq '$other') { \$self->$other; \$token = \$self->top; goto AGAIN; }";
-            }
-            if ( defined $state->{default} ) {
-                say "    return \$self->$state->{name}_default;";
-            }
-            else {
-                say '    die "Unexpected $token->{name} at line $lexer->{line}, column $lexer->{column}";';
-            }
-            say '}';
-            say '';
+            $templater->process( 'intermediate.tt', $state );
         }
     }
-    say "1;";
+
+    print $footer;
+
     return 1;
 }

@@ -1,0 +1,22 @@
+sub [% name %] {
+    my ($self) = @_;
+
+    my $has = [];
+
+    foreach (1..[% depth %]) {
+        my $thing = $self->pop;
+        next if ref $thing->{has} ne 'ARRAY';
+
+        if ( scalar @{ $thing->{has} } == 1 ) { push @{ $has }, $thing->{has}[0]; }
+        else                                  { push @{ $has }, $thing; }
+    }
+
+    $self->push(
+        Kent::Token->new(
+            'has'  => $has,
+            'name' => '[% returns %]', )
+    );
+
+    return 1;
+}
+

@@ -1,0 +1,10 @@
+sub [% name %] {
+    my ($self) = @_;
+    my $temp = $self->pop;
+    my $token = $self->pop;
+    $token->{name} = '[% returns %]';
+    $self->push($token);
+    $self->push($temp);
+    return 1;
+}
+

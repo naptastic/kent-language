@@ -1,0 +1,6 @@
+sub [% name %] {
+    my ($self) = @_;
+    my $token  = $self->top;
+    $token->{name} = '[% returns %]';
+    return 1;
+}
