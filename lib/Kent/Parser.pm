@@ -31,12 +31,19 @@ sub push {
     my ( $self, $thingy ) = @_;
     push @{ $self->{stack} }, $thingy;
 
+    say "push called from " . [ caller(1) ]->[3];
+    say $self->join('_');
+
     return 1;
 }
 
 sub pop {
     my ( $self ) = @_;
     my $thingy = pop @{ $self->{stack} };
+
+    say "pop called from " . [ caller(1) ]->[3];
+    say $self->join('_');
+
     return $thingy;
 }
 
@@ -47,7 +54,7 @@ sub top {
 
 sub join {
     my ( $self, $string ) = @_;
-    $string // q{};
+    $string // q{_};
     return join( $string, map { $_->name } @{ $self->{stack} } );
 }
 
