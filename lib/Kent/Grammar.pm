@@ -29,7 +29,7 @@ sub new {
 }
 
 sub rules_from_lines {
-    my ( $self ) = @_;
+    my ($self) = @_;
     my $lines = $self->{lines};
 
     # First line is comments.
@@ -50,9 +50,9 @@ sub rules_from_lines {
 }
 
 sub choices_from_rules {
-    my ( $self ) = @_;
-    my $rules    = $self->{rules};
-    my $choices  = {};
+    my ($self)  = @_;
+    my $rules   = $self->{rules};
+    my $choices = {};
 
     foreach my $rule ( @{$rules} ) {
         my @parts             = @{ $rule->{parts} };
