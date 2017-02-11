@@ -31,9 +31,13 @@ my $footer = "1;\n";
 
 my $grammar = Kent::Grammar->new;
 
-summarize_rules( $grammar );
+# say Dumper($grammar);
+
+#say Kent::Util::dump( $grammar );
+
+#summarize_rules( $grammar );
 summarize_choices( $grammar );
-summarize_states( $grammar );
+#summarize_states( $grammar );
 
 # print_state_table_module( $states );
 
@@ -43,7 +47,7 @@ sub summarize_rules {
     my ( $grammar ) = @_;
     my $rules = $grammar->{rules};
 
-    my $last_token_name;
+    my $last_token_name //= '';
 
     foreach my $rule ( sort { $a->{sort_order} <=> $b->{sort_order} } @{$rules} ) {
         next unless scalar @{ $rule->{parts} };

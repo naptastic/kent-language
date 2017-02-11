@@ -6,6 +6,8 @@ use v5.14;
 
 use Kent::Util;
 
+use Kent::Util;
+
 our $grammar_filename = 'grammar.csv';
 
 sub new {
@@ -50,9 +52,9 @@ sub rules_from_lines {
 }
 
 sub choices_from_rules {
-    my ($self)  = @_;
-    my $rules   = $self->{rules};
-    my $choices = {};
+    my ( $self ) = @_;
+    my $rules    = $self->{rules};
+    my $choices  = {};
 
     foreach my $rule ( @{$rules} ) {
         my @parts             = @{ $rule->{parts} };
