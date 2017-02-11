@@ -3,24 +3,28 @@ package Kent::Grammar;
 use strict;
 use warnings;
 
+use Kent::Util;
+
 our $grammar_filename = 'grammar.csv';
 
 sub new {
-    my ($class) = @_;
+    my ( $class ) = @_;
 
     my $self = bless {}, $class;
 
-    $self->{lines}   = [ Kent::Util::slurp($grammar_filename) ];
+    $self->{lines}   = [ Kent::Util::slurp( $grammar_filename ) ];
     $self->{rules}   = $self->rules_from_lines;
     $self->{choices} = $self->choices_from_rules;
     $self->{states}  = $self->states_from_choices;
+
+    Kent::Util::dump( $self );
 
     return $self;
 }
 
 sub rules_from_lines {
-    my ($self) = @_;
-    my $lines  = $self->{lines};
+    my ( $self ) = @_;
+    my $lines = $self->{lines};
 
     # First line is comments.
     shift @{ $self->{lines} };
@@ -40,9 +44,9 @@ sub rules_from_lines {
 }
 
 sub choices_from_rules {
-    my ($self)  = @_;
-    my $rules   = $self->{rules};
-    my $choices = {};
+    my ( $self ) = @_;
+    my $rules    = $self->{rules};
+    my $choices  = {};
 
     foreach my $rule ( @{$rules} ) {
         my @parts             = @{ $rule->{parts} };
@@ -80,13 +84,13 @@ sub choices_from_rules {
 }
 
 sub states_from_choices {
-    my ($self, $name, $depth ) = @_;
+    my ( $self, $name, $depth ) = @_;
     my $choices = $self->{choices};
     my $rules   = $self->{rules};
     my @states;
 
-    $name //= [];
-    $depth       //= 1;
+    $name  //= [];
+    $depth //= 1;
 
     foreach my $key ( sort keys %$choices ) {
         if ( ref $choices->{$key} eq 'HASH' ) {
@@ -108,26 +112,28 @@ sub states_from_choices {
 
             foreach my $now ( @nows ) { $now =~ s/[*]//; }
 
+#            print "$name\n";
+
             push @states,
-                { 'name'    => join( '_', @{ $name }, $key),
+                { 'name'    => join( '_', @{$name}, $key ),
                   'depth'   => $depth,
                   'nows'    => \@nows,
                   'nexts'   => \@nexts,
                   'others'  => $self->find_others( $choices->{$key} ),
                   'default' => $default, };
-            push @states, @{ states_from_choices( $choices->{$key}, [ @{ $name }, $key ], $depth + 1 ) };
+            push @states, $self->states_from_choices( $choices->{$key}, [ @{$name}, $key ], $depth + 1 );
         }
         else {
             if ( $key eq 'default' ) {
                 push @states,
-                    { 'name'    => join( '_', @{ $name }, $key),
+                    { 'name'    => join( '_', @{$name}, $key ),
                       'returns' => $choices->{$key},
                       'default' => 1,
                       'depth'   => $depth, };
             }
             else {
                 push @states,
-                    { 'name'    => join( '_', @{ $name }, $key),
+                    { 'name'    => join( '_', @{$name}, $key ),
                       'returns' => $choices->{$key},
                       'depth'   => $depth, };
             }
@@ -138,7 +144,7 @@ sub states_from_choices {
 }
 
 sub find_others {
-    my ($self, $choice) = @_;
+    my ( $self, $choice ) = @_;
     my $rules = $self->{rules};
     my %others;
     my @to_check = keys %{$choice};
@@ -155,6 +161,5 @@ sub find_others {
 
     return [ sort keys %others ];
 }
-
 
 1;
