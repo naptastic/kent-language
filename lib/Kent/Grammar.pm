@@ -84,13 +84,13 @@ sub choices_from_rules {
 }
 
 sub states_from_choices {
-    my ( $self, $name, $depth ) = @_;
-    my $choices = $self->{choices};
-    my $rules   = $self->{rules};
+    my ( $self, $choices, $name, $depth ) = @_;
+    my $rules = $self->{rules};
     my @states;
 
-    $name  //= [];
-    $depth //= 1;
+    $choices //= $self->{choices};
+    $name    //= [];
+    $depth   //= 1;
 
     foreach my $key ( sort keys %$choices ) {
         if ( ref $choices->{$key} eq 'HASH' ) {
@@ -112,8 +112,6 @@ sub states_from_choices {
 
             foreach my $now ( @nows ) { $now =~ s/[*]//; }
 
-#            print "$name\n";
-
             push @states,
                 { 'name'    => join( '_', @{$name}, $key ),
                   'depth'   => $depth,
@@ -121,7 +119,7 @@ sub states_from_choices {
                   'nexts'   => \@nexts,
                   'others'  => $self->find_others( $choices->{$key} ),
                   'default' => $default, };
-            push @states, $self->states_from_choices( $choices->{$key}, [ @{$name}, $key ], $depth + 1 );
+            push @states, @{ $self->states_from_choices( $choices->{$key}, [ @{$name}, $key ], $depth + 1 ) };
         }
         else {
             if ( $key eq 'default' ) {
