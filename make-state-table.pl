@@ -10,13 +10,11 @@ use Kent::Util;
 $Data::Dumper::Sortkeys = 1;
 
 use JSON;
-use Template;
 
 my $grammar_filename = 'grammar.csv';
 my $debug            = 0;
 
 my $printer = JSON->new->canonical( 1 )->pretty( 1 );
-my $templater = Template->new( { 'INCLUDE_PATH' => 'share/', } );
 
 my $header = <<EOM;
 package Kent::Parser::States;
@@ -36,8 +34,8 @@ my $grammar = Kent::Grammar->new;
 #say Kent::Util::dump( $grammar );
 
 #summarize_rules( $grammar );
-summarize_choices( $grammar );
-#summarize_states( $grammar );
+# summarize_choices( $grammar );
+summarize_states( $grammar );
 
 # print_state_table_module( $states );
 
@@ -86,24 +84,4 @@ sub summarize_states {
     return 1;
 }
 
-sub print_state_table_module {
-    my ( $grammar ) = @_;
-    my $states = $grammar->{states};
-
-    print $header;
-
-    foreach my $state ( @{$states} ) {
-        if ( $state->{returns} ) {
-            if    ( $state->{default} )   { $templater->process( 'terminal_default.tt', $state ); }
-            elsif ( $state->{depth} > 1 ) { $templater->process( 'terminal_multi.tt',   $state ); }
-            else                          { $templater->process( 'terminal_single.tt',  $state ); }
-        }
-        else {
-            $templater->process( 'intermediate.tt', $state );
-        }
-    }
-
-    print $footer;
-
-    return 1;
-}
+1;
