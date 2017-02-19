@@ -2,10 +2,10 @@
 package Kent;
 use common::sense;
 
-use Kent::Parser ();
+use Kent::Parser             ();
 use Kent::Parser::BruteForce ();
-use Kent::Util   ();
-use Data::Dumper ();
+use Kent::Util               ();
+use Data::Dumper             ();
 $Data::Dumper::Sortkeys = 1;
 
 script( @ARGV ) unless caller;
@@ -22,7 +22,7 @@ sub script {
     my $parser = Kent::Parser->new( sourcecode => $sourcecode );
     my $ast = $parser->parse();
 
-    say Kent::Util::dump($ast);
+    say Kent::Util::dump( $ast );
 
     return 1;
 }

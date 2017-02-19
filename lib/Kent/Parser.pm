@@ -30,16 +30,17 @@ sub parse {
     my @has             = ();
     my $lexer           = $self->lexer;
     my $token           = $lexer->next;
-    say Kent::Util::dump($self->{grammar});
-    
-    my $states          = $self->{grammar}{states};
+#    say Kent::Util::dump($self->{grammar}{states_ar});
+
+    my $states          = $self->{grammar}{states_hr};
     my $next_state      = $states->{$token->name};
 
     $self->_skip_whitespace( $token );
 
 DO_STATE:
 
-    die "'$next_state' is not a valid state in the parser's state table!" unless defined $next_state;
+#    this is dumb
+#    die "'$next_state' is not a valid state in the parser's state table!" unless defined $next_state;
     $state = $self->{states}{$next_state};
     say $state->{name};
 
