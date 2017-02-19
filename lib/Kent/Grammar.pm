@@ -12,10 +12,15 @@ sub new {
 
     my $self = bless {}, $class;
 
-    $self->{lines}   = [ Kent::Util::slurp( $grammar_filename ) ];
-    $self->{rules}   = $self->rules_from_lines;
-    $self->{choices} = $self->choices_from_rules;
-    $self->{states}  = $self->states_from_choices;
+    $self->{lines}     = [ Kent::Util::slurp( $grammar_filename ) ];
+    $self->{rules}     = $self->rules_from_lines;
+    $self->{choices}   = $self->choices_from_rules;
+    $self->{states_ar} = $self->states_from_choices;
+    $self->{states_hr} = $self->states_hr_from_states_ar;
+
+    foreach my $state ( @{ $self->{states_ar} } ) {
+        $self->{states}{ $state->{name} } = $state;
+    }
 
     Kent::Util::dump( $self );
 
@@ -139,6 +144,19 @@ sub states_from_choices {
     }
     foreach my $state ( @states ) { $state->{name} =~ s/[*]//; }
     return \@states;
+}
+
+sub states_hr_from_states_ar {
+    my ( $self ) = @_;
+    my $states_ar = $self->{states_ar};
+
+    my $states_hr = {};
+
+    foreach my $state ( @{ $states_ar } ) {
+        $states_hr->{$state->{name}} = $state;
+    }
+
+    return $states_hr;
 }
 
 sub find_others {

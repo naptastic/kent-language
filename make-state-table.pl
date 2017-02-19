@@ -31,9 +31,7 @@ my $grammar = Kent::Grammar->new;
 
 # say Dumper($grammar);
 
-#say Kent::Util::dump( $grammar );
-
-#summarize_rules( $grammar );
+# summarize_rules( $grammar );
 # summarize_choices( $grammar );
 summarize_states( $grammar );
 
@@ -65,7 +63,7 @@ sub summarize_choices {
 
 sub summarize_states {
     my ( $grammar ) = @_;
-    my $states = $grammar->{states};
+    my $states = $grammar->{states_ar};
 
     foreach my $state ( @{$states} ) {
         say "$state->{name}";
