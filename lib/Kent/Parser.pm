@@ -1,6 +1,8 @@
 package Kent::Parser;
 
-use common::sense;
+use strict;
+use warnings;
+use v5.14;
 use Kent::Grammar;
 use Kent::Lexer;
 use Kent::Token;
@@ -29,66 +31,92 @@ sub parse {
     my @previous_states = ();
     my @has             = ();
     my $lexer           = $self->lexer;
-    my $token           = $lexer->next;
-#    say Kent::Util::dump($self->{grammar}{states_ar});
+    my $token           = $self->_skip_whitespace( { 'name' => 'space' } );
 
-    my $states          = $self->{grammar}{states_hr};
-    my $next_state      = $states->{$token->name};
+    #    say Kent::Util::dump($token);
+    my $states = $self->{grammar}{states_hr};
 
-    $self->_skip_whitespace( $token );
+    #    say Kent::Util::dump($states);
+
+    #    say "first non-whitespace token:";
+    my $next_state = $token->{name};
+
+    #    say "next state: $next_state";
 
 DO_STATE:
+    while ( $token->name ne 'eof' ) {
 
-#    this is dumb
-#    die "'$next_state' is not a valid state in the parser's state table!" unless defined $next_state;
-    $state = $self->{states}{$next_state};
-    say $state->{name};
+        $state = $states->{$next_state};
+        say '';
+        say "reached DO_STATE: $state->{name} and it looks like this:";
+        die 'oh no, a statement' if $next_state eq 'statement';
 
-    if ( $state->{returns} ) {
-        shift @has, $self->pop foreach ( 1 .. $state->{depth} );
-        $self->push(
-                     Kent::Token->new( 'name' => $state->{returns},
-                                       'has'  => \@has,
-                     ) );
-        $next_state = pop @previous_states;
-        @has = ();
-        next DO_STATE;
-    }
+        say Kent::Util::dump( $state ) if $state->{name} eq 'int';
 
-    # nows goes here
+        if ( $state->{returns} ) {
+#            say "this state returns a $state->{returns}";
+            unshift @has, $self->pop foreach ( 1 .. $state->{depth} );
+            $self->push(
+                         Kent::Token->new( 'name' => $state->{returns},
+                                           'has'  => \@has,
+                         ) );
+            $next_state = pop @previous_states;
+            if ( defined $next_state ) {
+                $next_state .= "_$state->{returns}";
+            }
+            else {
+                if ($state->{default}) {
+                    say "line 67 (default return)";
+                    $next_state = "$state->{returns}_$token->{name}";
+                    $token      = $lexer->next;
+                } else {
+                    $next_state = $state->{returns};
+                    #$token = $lexer->next;
+                }
+            }
 
-    $token = $self->_skip_whitespace( $token );
+            say "after returning a $state->{returns}, I think my next state should be $next_state";
 
-    # nexts go here
-    foreach my $next ( @{ $state->{nexts} } ) {
-        if ( $token->{name} eq $next ) {
-            $self->push( $token );
-            $next_state = "$state->{name}_$token->{name}";
-            $token      = $lexer->next;
+            # $next_state = "$next_state\_$state->{returns}";
+            @has = ();
             next DO_STATE;
         }
-    }
 
-    # others go here
-    foreach my $other ( @{$state->{others}} ) {
-        if ( $token->{name} = $other ) {
+        # nows goes here
+
+        $token = $self->_skip_whitespace( $token );
+
+        # XXX The foreach is unnecessary; just look up the next directly. O(1) rather than O(N).
+        foreach my $next ( @{ $state->{nexts} } ) {
+#           say "checking NEXT '$next' against $token->{name}";
+            if ( $token->{name} eq $next ) {
+                say "going with NEXT $next";
+                $self->push( $token );
+                $next_state = "$state->{name}_$token->{name}";
+#                $token      = $lexer->next;
+                next DO_STATE;
+            }
+        }
+
+        # others go here
+        foreach my $other ( @{ $state->{others} } ) {
+#            say "checking OTHER '$other' against $token->{name}";
+            if ( $token->{name} eq $other ) {
+                say "Going with OTHER $other";
+                $self->push( $token );
+                push @previous_states, "$state->{name}";
+                $next_state = $token->{name};
+#                $token      = $lexer->next;
+                next DO_STATE;
+            }
+        }
+
+        if ( $state->{default} ) {
             $self->push( $token );
-            push @previous_states, $state->{name};
-            $next_state = $token->{name};
-            $token      = $lexer->next;
+            $token = $self->_skip_whitespace( $lexer->next );
+            $next_state = $state->{default};
             next DO_STATE;
         }
-    }
-
-    if ( $state->{default} ) {
-
-        # token remains unchanged
-        $self->top->{name} = $state->{default};
-        $self->push( $token );
-
-        $self->_skip_whitespace;
-
-        $next_state = "$state->{default}_$token->{name}";
     }
 
     return $self->{stack};
@@ -97,12 +125,15 @@ DO_STATE:
 sub lexer { $_[0]->{lexer} }
 
 sub push {
-    my ( $self, $thingy ) = @_;
-    push @{ $self->{stack} }, $thingy;
+    my ( $self, $token ) = @_;
+    push @{ $self->{stack} }, $token;
+
+#    say "pushing a new token onto the stack. Here's what it looks like:";
+#    say Kent::Util::dump($token);
 
     if ( $debug ) {
-        say "push called from " . [ caller(1) ]->[3];
-        say $self->join('_');
+        say "push called from " . [ caller( 1 ) ]->[3];
+        say $self->join( '_' );
     }
 
     return 1;
@@ -113,8 +144,8 @@ sub pop {
     my $thingy = pop @{ $self->{stack} };
 
     if ( $debug ) {
-        say "pop called from " . [ caller(1) ]->[3];
-        say $self->join('_');
+        say "pop called from " . [ caller( 1 ) ]->[3];
+        say $self->join( '_' );
     }
 
     return $thingy;
@@ -132,7 +163,7 @@ sub join {
 }
 
 sub _skip_whitespace {
-    my ($self, $token) = @_;
+    my ( $self, $token ) = @_;
     my $lexer = $self->lexer;
 
     while ( $token->{name} eq 'space' ) {

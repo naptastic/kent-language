@@ -6,8 +6,6 @@ use v5.14;
 
 use Kent::Util;
 
-use Kent::Util;
-
 our $grammar_filename = 'grammar.csv';
 
 sub new {
@@ -25,7 +23,7 @@ sub new {
         $self->{states}{ $state->{name} } = $state;
     }
 
-    Kent::Util::dump( $self );
+    print Kent::Util::dump( $self );
 
     return $self;
 }

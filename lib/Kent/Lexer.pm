@@ -62,12 +62,11 @@ sub _make_token {
         $newtoken->{name} = $raw;
     }
 
-    if ( $newtoken->name eq 'newline' ) {
+    if ( $newtoken->{raw} eq "\n" ) {
 
         # It doesn't matter to combine multiple 'space' tokens since states
         # that discard whitespace will continue throwing away tokens until
         # they find something that isn't some kind of 'space'.
-        $newtoken->{name} = 'space';
         $self->{line}++;
         $self->{column} = 1;
     }
@@ -77,6 +76,8 @@ sub _make_token {
     else {
         $self->{column} += $newtoken->width;
     }
+
+#    say "Returning token:" . Kent::Util::dump($newtoken);
 
     return $newtoken;
 }

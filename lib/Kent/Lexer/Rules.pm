@@ -46,7 +46,7 @@ sub code_rules {
     # Basics
     # TODO: Forbid tabs
     [ qr/^([\t\f\r ]+)/,                     'space',         'code',    ],
-    [ qr/^(\n)/,                             'newline',       'code',    ],
+    [ "\n",                                  'space',         'code',    ],
     [ qr/^([A-Za-z_][A-Za-z0-9_]*)/,         'id',            'code',    ],
     [ qr/^(0x[0-9A-Fa-f]+)/,                 'hex',           'code',    ],
     [ qr/^(0[0-7]+)/,                        'oct',           'code',    ],
