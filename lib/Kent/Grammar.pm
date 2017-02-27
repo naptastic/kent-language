@@ -2,6 +2,7 @@ package Kent::Grammar;
 
 use strict;
 use warnings;
+use v5.14;
 
 use Kent::Util;
 
@@ -22,7 +23,7 @@ sub new {
         $self->{states}{ $state->{name} } = $state;
     }
 
-    Kent::Util::dump( $self );
+    print Kent::Util::dump( $self );
 
     return $self;
 }
@@ -95,7 +96,9 @@ sub states_from_choices {
 
     $choices //= $self->{choices};
     $name    //= [];
-    $depth   //= 1;
+    $depth   //= 0;
+
+    my $new_state;
 
     foreach my $key ( sort keys %$choices ) {
         if ( ref $choices->{$key} eq 'HASH' ) {
@@ -111,19 +114,20 @@ sub states_from_choices {
             foreach my $choice ( sort keys %{ $choices->{$key} } ) {
                 next if ref $choice eq 'HASH';
                 if ( $choice =~ m/[*]/ ) { push @nows, $choice; }
-                elsif ( $choice eq 'default' ) { $default = $choice; }
+                elsif ( $choice eq 'default' ) { $default = 1; }
                 else                           { push @nexts, $choice; }
             }
 
             foreach my $now ( @nows ) { $now =~ s/[*]//; }
 
-            push @states,
-                { 'name'    => join( '_', @{$name}, $key ),
-                  'depth'   => $depth,
-                  'nows'    => \@nows,
-                  'nexts'   => \@nexts,
-                  'others'  => $self->find_others( $choices->{$key} ),
-                  'default' => $default, };
+            $new_state = { 'name'   => join( '_', @{$name}, $key ),
+                           'depth'  => $depth,
+                           'nows'   => \@nows,
+                           'nexts'  => \@nexts,
+                           'others' => $self->find_others( $choices->{$key} ), };
+            if ( $default ) { $new_state->{default} = join( '_', @{$name}, $key, 'default' ) }
+
+            push @states, $new_state;
             push @states, @{ $self->states_from_choices( $choices->{$key}, [ @{$name}, $key ], $depth + 1 ) };
         }
         else {
@@ -152,8 +156,8 @@ sub states_hr_from_states_ar {
 
     my $states_hr = {};
 
-    foreach my $state ( @{ $states_ar } ) {
-        $states_hr->{$state->{name}} = $state;
+    foreach my $state ( @{$states_ar} ) {
+        $states_hr->{ $state->{name} } = $state;
     }
 
     return $states_hr;

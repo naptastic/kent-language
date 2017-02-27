@@ -5,7 +5,7 @@ use JSON;
 
 sub dump {
     my ( $structure ) = @_;
-    my $printer = JSON->new->pretty->allow_blessed->convert_blessed( 1 )->canonical( 1 );
+    my $printer = JSON->new->pretty->allow_blessed->convert_blessed( 1 )->canonical( 1 )->max_depth( 9 );
     return $printer->encode( $structure );
 }
 
