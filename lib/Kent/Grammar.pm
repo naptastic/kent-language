@@ -40,10 +40,11 @@ sub rules_from_lines {
     foreach my $line ( @{$lines} ) {
         my $rule = {};
         my @parts = split( /,/, $line );
-        $rule->{token_name} = $parts[0];
+        $rule->{token_name} = $parts[0] || next;
         $rule->{parts}      = [ grep { $_ ne '' } @parts[ 1 .. 6 ] ];
         $rule->{category}   = $parts[7];
         $rule->{sort_order} = $parts[8] + 0;                            # Remove newline and cast to IV
+
         push @{$rules}, $rule;
     }
     return $rules;
@@ -59,19 +60,13 @@ sub choices_from_rules {
         my $token_name        = $rule->{token_name};
         my $forbid_whitespace = $rule->{forbid_whitespace};
 
-        @parts = grep { $_ ne '' } @parts;
-        next if scalar @parts == 0;
-
         my $ref = $choices;
 
-        while ( 1 ) {
-
-            my $part = shift @parts;
+        while ( my $part = shift @parts ) {
 
             if ( scalar @parts == 0 ) {
                 if   ( ref $ref->{$part} eq 'HASH' ) { $ref->{$part}{'default'} = $token_name; }
                 else                                 { $ref->{$part}            = $token_name; }
-                last;
             }
             else {
                 $ref->{$part} //= {};
