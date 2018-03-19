@@ -16,9 +16,20 @@ our @qchars = ( qw| ' ' " " < > ( ) [ ]
                     { }                 | );
 
 # otherwise this will be interpolated with spaces, which would cause problems.
-our $qchars = join '', @qchars;
+our $qchars = join '\\', @qchars;
 
 our %pairs = ( @qchars, reverse @qchars );
+
+sub rules_by_context {
+    my ( $context ) = @_;
+
+    if ( $context eq 'code' )    { return table( code_rules() ); }
+    if ( $context eq 'comment' ) { return table( comment_rules() ); }
+    if ( $context eq 'iquote' )  { return table( iquote_rules() ); }
+    if ( $context eq 'nquote' )  { return table( nquote_rules() ); }
+
+    die "Unknown lexer context '$context'";
+}
 
 #
 # RULES TABLES: Every rule is an arrayref consisting of:

@@ -30,12 +30,12 @@ sub new {
     # XXX Does 'next_context' actually need to be stored here?
 
 #    say "Created a token! Here's what it looks like:";
-    say "Created a token named $self->{name} at line $self->{line}, column $self->{column}";
+#    say "Created a token named $self->{name} at line $self->{line}, column $self->{column}";
 #    use Data::Dumper;
 #    say Dumper($self);
 #    say Kent::Util::dump( $self );
 
-    say "    token constructor called from " . [ caller(3) ]->[3] . " line " . [ caller(3) ]->[2];
+#    say "    token constructor called from " . [ caller(3) ]->[3] . " line " . [ caller(3) ]->[2];
 
     return bless $self, $class;
 }

@@ -26,11 +26,12 @@ sub new {
 }
 
 sub next {
-    my ( $self, $rules ) = @_;
+    my ( $self, $context ) = @_;
 
     die 'Tried to read past end of file' if $file_is_over;
 
-    $rules //= Kent::Lexer::Rules::table( Kent::Lexer::Rules::code_rules );
+    $context //= 'code';
+    my $rules  = Kent::Lexer::Rules::rules_by_context($context);
 
     foreach my $rule ( @{$rules} ) {
 
